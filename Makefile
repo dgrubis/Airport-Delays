@@ -3,9 +3,9 @@
 # Customize these paths for your environment.
 # -----------------------------------------------------------
 hadoop.root=/home/harshit/Documents/tools/hadoop/hadoop-2.9.1
-jar.name=twitter-follower-1.0.jar
+jar.name=group31-1.0.jar
 jar.path=target/${jar.name}
-job.name=tc.TwitterCount
+job.name=tc.Group31
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution

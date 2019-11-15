@@ -18,10 +18,10 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-public class TwitterCount extends Configured implements Tool {
-	private static final Logger logger = LogManager.getLogger(TwitterCount.class);
+public class Group31 extends Configured implements Tool {
+	private static final Logger logger = LogManager.getLogger(Group31.class);
 
-	public static class TwitterMapper extends Mapper<Object, Text, Text, IntWritable> {
+	public static class Group31Mapper extends Mapper<Object, Text, Text, IntWritable> {
 		private final static IntWritable one = new IntWritable(1);
 		private final Text follower = new Text();
 
@@ -52,7 +52,7 @@ public class TwitterCount extends Configured implements Tool {
 	public int run(final String[] args) throws Exception {
 		final Configuration conf = getConf();
 		final Job job = Job.getInstance(conf, "Follower Count");
-		job.setJarByClass(TwitterCount.class);
+		job.setJarByClass(Group31.class);
 		final Configuration jobConf = job.getConfiguration();
 		jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
 		// Delete output directory, only to ease local development; will not work on AWS. ===========
@@ -61,7 +61,7 @@ public class TwitterCount extends Configured implements Tool {
 //			fileSystem.delete(new Path(args[1]), true);
 //		}
 		// ================
-		job.setMapperClass(TwitterMapper.class);
+		job.setMapperClass(Group31Mapper.class);
 		job.setCombinerClass(IntSumReducer.class);
 		job.setReducerClass(IntSumReducer.class);
 		job.setOutputKeyClass(Text.class);
@@ -77,7 +77,7 @@ public class TwitterCount extends Configured implements Tool {
 		}
 
 		try {
-			ToolRunner.run(new TwitterCount(), args);
+			ToolRunner.run(new Group31(), args);
 		} catch (final Exception e) {
 			logger.error("", e);
 		}
