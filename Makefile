@@ -5,7 +5,7 @@
 hadoop.root=/home/harshit/Documents/tools/hadoop/hadoop-2.9.1
 jar.name=group31-1.0.jar
 jar.path=target/${jar.name}
-job.name=tc.Group31
+job.name=project.Group31
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
