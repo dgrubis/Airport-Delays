@@ -22,7 +22,9 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import project.helperClasses.GSOD;
+import project.helperClasses.gsod.GSOD;
+import project.helperClasses.gsod.GSOD_Text;
+import project.helperClasses.gsod.GSOD_Values;
 import project.helperClasses.LatLong;
 
 /**
@@ -62,7 +64,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
-      GSOD observation = GSOD.parseCSV(input.toString());
+      GSOD_Text observation = GSOD_Text.parseCSVFromNOAA(input.toString());
       LatLong location = weatherStationsMap.get(observation.getUSAF_WBAN());
       if (location == null){
         logger.info("Observation did not match station with USAF_WBAN = " + observation.getUSAF_WBAN());
@@ -70,7 +72,6 @@ public class JoinWeatherWithStations extends Configured implements Tool {
       }
       observation.setLocation(location);
       context.write(nullKey, observation);
-
     }
   }
 
@@ -98,7 +99,6 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
     // Set up distributed cache with a copy of weather station data
-    //TODO: make filelabel a constant value
     job.addCacheFile(new URI(args[1] + "#" + FILE_LABEL));
 
     return job.waitForCompletion(true) ? 0 : 1;

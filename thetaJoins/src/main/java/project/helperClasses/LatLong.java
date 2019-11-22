@@ -13,4 +13,12 @@ public class LatLong {
     this.latitude = Double.parseDouble(latitude);
     this.longitude = Double.parseDouble(longitude);
   }
+
+  public double getLatitude() {
+    return latitude;
+  }
+
+  public double getLongitude() {
+    return longitude;
+  }
 }
