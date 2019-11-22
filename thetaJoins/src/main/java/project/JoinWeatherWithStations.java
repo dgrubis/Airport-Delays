@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -21,7 +22,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import project.helperClasses.USAF_WBAN;
+import project.helperClasses.GSOD;
+import project.helperClasses.LatLong;
 
 /**
  * Preprocessing job to equi-join weather stations data with weather observations data, producing a
@@ -30,18 +32,22 @@ import project.helperClasses.USAF_WBAN;
  */
 public class JoinWeatherWithStations extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(JoinWeatherWithStations.class);
+  private static final String FILE_LABEL = "fileLabel";
 
-  public static class repJoinMapper extends Mapper<Object, Text, Text, IntWritable> {
+  public static class repJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
     // Using HashMap instead of MultiMap because each key should identify one station only
-    private Map<String, String> weatherStationsMap = new HashMap<>();
+    private Map<String, LatLong> weatherStationsMap = new HashMap<>();
+    private NullWritable nullKey = NullWritable.get();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
       BufferedReader reader = getReaderFromFileCache(context);
       String record;
       while ((record = reader.readLine()) != null) {
-        USAF_WBAN stationKey = USAF_WBAN.parseFromStationCSV(record);
-        //followerUserHashMap.put(followerUserPair.getFirst(), followerUserPair.getSecond());
+        String[] station = record.split(",");
+        String USAF_WBAN = station[0] + station[1];
+        LatLong location = new LatLong(station[7], station[8]);
+        weatherStationsMap.put(USAF_WBAN, location);
       }
       reader.close();
     }
@@ -51,11 +57,19 @@ public class JoinWeatherWithStations extends Configured implements Tool {
       if (cacheFiles == null || cacheFiles.length == 0) {
         throw new RuntimeException("Input file was not added to the Distributed File Cache.");
       }
-      return new BufferedReader(new FileReader("filelabel"));
+      return new BufferedReader(new FileReader(FILE_LABEL));
     }
 
     @Override
-    public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
+    public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
+      GSOD observation = GSOD.parseCSV(input.toString());
+      LatLong location = weatherStationsMap.get(observation.getUSAF_WBAN());
+      if (location == null){
+        logger.info("Observation did not match station with USAF_WBAN = " + observation.getUSAF_WBAN());
+        return;
+      }
+      observation.setLocation(location);
+      context.write(nullKey, observation);
 
     }
   }
@@ -85,7 +99,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     // Set up distributed cache with a copy of weather station data
     //TODO: make filelabel a constant value
-    job.addCacheFile(new URI(args[1] + "#filelabel"));
+    job.addCacheFile(new URI(args[1] + "#" + FILE_LABEL));
 
     return job.waitForCompletion(true) ? 0 : 1;
   }
