@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.PrimitiveIterator;
 
-import project.helperClasses.LatLong;
+import project.helperClasses.LatLon;
 
 /**
  * Global surface summary of the day produced by the National Climatic Data Center (NCDC) and
@@ -41,7 +41,7 @@ public class GSOD_Values implements Writable, GSOD {
   private boolean hail;
   private boolean thunder;
   private boolean tornadoOrFunnelCloud;
-  private LatLong location; // Must be provided from another dataset
+  private LatLon location; // Must be provided from another dataset
 
   @Override
   public String getUSAF_WBAN() {
@@ -49,7 +49,7 @@ public class GSOD_Values implements Writable, GSOD {
   }
 
   @Override
-  public void setLocation(LatLong location) {
+  public void setLocation(LatLon location) {
     this.location = location;
   }
 

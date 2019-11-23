@@ -8,7 +8,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.time.LocalDate;
 
-import project.helperClasses.LatLong;
+import project.helperClasses.LatLon;
 
 /**
  * Global surface summary of the day produced by the National Climatic Data Center (NCDC) and
@@ -17,12 +17,12 @@ import project.helperClasses.LatLong;
  * instance can store USAF/WBAN data, but will not emit it from mappers or reducers.
  * <p>
  * This version of a GSOD is more efficient than value-based GSOD storage, but cannot be used to
- * average GSOD values;
+ * average GSOD values.
  */
 public class GSOD_Text implements Writable, GSOD {
   private String USAF_WBAN; // Air Force Station ID and Weather Bureau Air Force Navy number
   private LocalDate date;
-  private LatLong location; // Must be provided from another dataset
+  private LatLon location; // Must be provided from another dataset
   private Text data;
 
   @Override
@@ -31,15 +31,18 @@ public class GSOD_Text implements Writable, GSOD {
   }
 
   @Override
-  public void setLocation(LatLong location) {
+  public void setLocation(LatLon location) {
     this.location = location;
   }
 
   /**
-   * Parse a GSOD from a NOAA weather observation record string. Location data will be null.
+   * Parse a GSOD from a NOAA weather observation record string. Location data will be null.  MAX,
+   * MIN, PRCP, and SNDP will be modified to strip extraneous flags and/or to reflect the data's
+   * actual value.  See NOAA documentation.  Data in the form 99.9/999.9/9999.9 indicates missing
+   * data point.
    *
    * @param record an input record as described in NOAA weather documentation
-   * @returna parsed GSOD
+   * @return a parsed GSOD
    */
   public static GSOD_Text parseCSVFromNOAA(String record) {
     String[] splitRecord = record.split(",\\s*");
@@ -92,7 +95,7 @@ public class GSOD_Text implements Writable, GSOD {
   }
 
   private static String parseMaxMinTemp(String temp) {
-    return temp.endsWith("*") ? temp.substring(0, temp.length() - 1) : temp;
+    return temp.endsWith("*") || temp.endsWith(" ") ? temp.substring(0, temp.length() - 1) : temp;
   }
 
   private static String parsePrecipitation(String p) {
@@ -144,10 +147,19 @@ public class GSOD_Text implements Writable, GSOD {
 
     double latitude = in.readDouble();
     double longitude = in.readDouble();
-    this.location = new LatLong(latitude, longitude);
+    this.location = new LatLon(latitude, longitude);
 
     this.data = new Text();
     data.readFields(in);
+  }
+
+  @Override
+  public String toString() {
+    if (location == null) {
+      throw new IllegalStateException("Cannot output a string for a GSOD without location data.");
+    }
+    //Format: DATE,LATITUDE,LONGITUDE,TEMP,DEWP,SLP,STP,VISIB,WDSP,MXSPD,GUST,MAX,MIN,PRCP,SNDP,FRSHTT,
+    return date + "," + location + "," + data;
   }
 }
 

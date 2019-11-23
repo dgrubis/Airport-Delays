@@ -1,8 +1,5 @@
 package project;
 
-import java.io.IOException;
-import java.util.StringTokenizer;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -18,69 +15,71 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+
 public class Group31 extends Configured implements Tool {
-	private static final Logger logger = LogManager.getLogger(Group31.class);
+  private static final Logger logger = LogManager.getLogger(Group31.class);
 
-	public static class Group31Mapper extends Mapper<Object, Text, Text, IntWritable> {
+  public static class Group31Mapper extends Mapper<Object, Text, Text, IntWritable> {
 
-		@Override
-		public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
-			context.write(follower, one);
-		}
-	}
+    @Override
+    public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
+      //context.write(follower, one);
+    }
+  }
 
-	public static class IntSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
-		
-		@Override
-		public void reduce(final Text key, final Iterable<IntWritable> values, final Context context) throws IOException, InterruptedException {
-			context.write(key, result);
-		}
-	}
+  public static class IntSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 
-	@Override
-	public int run(final String[] args) throws Exception {
+    @Override
+    public void reduce(final Text key, final Iterable<IntWritable> values, final Context context) throws IOException, InterruptedException {
+      //context.write(key, result);
+    }
+  }
 
-		//COnfiguration
-		final Configuration conf = getConf();
-		final Job job = Job.getInstance(conf, "Follower Count");
-		job.setJarByClass(Group31.class);
-		final Configuration jobConf = job.getConfiguration();
-		jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
+  @Override
+  public int run(final String[] args) throws Exception {
+
+    //COnfiguration
+    final Configuration conf = getConf();
+    final Job job = Job.getInstance(conf, "Follower Count");
+    job.setJarByClass(Group31.class);
+    final Configuration jobConf = job.getConfiguration();
+    jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
 
 
-		// Delete output directory, only to ease local development; will not work on AWS. ===========
+    // Delete output directory, only to ease local development; will not work on AWS. ===========
 //		final FileSystem fileSystem = FileSystem.get(conf);
 //		if (fileSystem.exists(new Path(args[1]))) {
 //			fileSystem.delete(new Path(args[1]), true);
 //		}
-		// ================
+    // ================
 
-		//Classes for mapper, combiner and reducer
-		job.setMapperClass(Group31Mapper.class);
-		job.setCombinerClass(IntSumReducer.class);
-		job.setReducerClass(IntSumReducer.class);
+    //Classes for mapper, combiner and reducer
+    job.setMapperClass(Group31Mapper.class);
+    job.setCombinerClass(IntSumReducer.class);
+    job.setReducerClass(IntSumReducer.class);
 
-		//Key and Value type for output
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+    //Key and Value type for output
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(IntWritable.class);
 
-		//Path for input and output
-		FileInputFormat.addInputPath(job, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+    //Path for input and output
+    FileInputFormat.addInputPath(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-		return job.waitForCompletion(true) ? 0 : 1;
-	}
+    return job.waitForCompletion(true) ? 0 : 1;
+  }
 
-	public static void main(final String[] args) {
-		if (args.length != 2) {
-			throw new Error("Two arguments required:\n<input-dir> <output-dir>");
-		}
+  public static void main(final String[] args) {
+    if (args.length != 2) {
+      throw new Error("Two arguments required:\n<input-dir> <output-dir>");
+    }
 
-		try {
-			ToolRunner.run(new Group31(), args);
-		} catch (final Exception e) {
-			logger.error("", e);
-		}
-	}
+    try {
+      ToolRunner.run(new Group31(), args);
+    } catch (final Exception e) {
+      logger.error("", e);
+    }
+  }
 
 }

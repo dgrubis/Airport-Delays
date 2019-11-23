@@ -4,13 +4,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import project.helperClasses.LatLong;
+import project.helperClasses.LatLon;
 
 public interface GSOD {
 
   public String getUSAF_WBAN();
 
-  public void setLocation(LatLong location);
+  public void setLocation(LatLon location);
 
   public void write(DataOutput out) throws IOException;
 

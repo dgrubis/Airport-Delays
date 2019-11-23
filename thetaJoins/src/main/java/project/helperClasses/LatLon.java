@@ -1,15 +1,15 @@
 package project.helperClasses;
 
-public class LatLong {
+public class LatLon {
   private double latitude;
   private double longitude;
 
-  public LatLong(double latitude, double longitude) {
+  public LatLon(double latitude, double longitude) {
     this.latitude = latitude;
     this.longitude = longitude;
   }
 
-  public LatLong(String latitude, String longitude) {
+  public LatLon(String latitude, String longitude) {
     this.latitude = Double.parseDouble(latitude);
     this.longitude = Double.parseDouble(longitude);
   }
@@ -20,5 +20,10 @@ public class LatLong {
 
   public double getLongitude() {
     return longitude;
+  }
+
+  @Override
+  public String toString() {
+    return latitude + "," + longitude;
   }
 }

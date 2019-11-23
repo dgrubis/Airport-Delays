@@ -22,10 +22,10 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import project.helperClasses.LatLon;
+import project.helperClasses.WeatherStation;
 import project.helperClasses.gsod.GSOD;
 import project.helperClasses.gsod.GSOD_Text;
-import project.helperClasses.gsod.GSOD_Values;
-import project.helperClasses.LatLong;
 
 /**
  * Preprocessing job to equi-join weather stations data with weather observations data, producing a
@@ -37,8 +37,8 @@ public class JoinWeatherWithStations extends Configured implements Tool {
   private static final String FILE_LABEL = "fileLabel";
 
   public static class repJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
-    // Using HashMap instead of MultiMap because each key should identify one station only
-    private Map<String, LatLong> weatherStationsMap = new HashMap<>();
+    // Using HashMap instead of MultiMap because each key identifies one station only
+    private Map<String, LatLon> weatherStationsMap = new HashMap<>();
     private NullWritable nullKey = NullWritable.get();
 
     @Override
@@ -46,10 +46,10 @@ public class JoinWeatherWithStations extends Configured implements Tool {
       BufferedReader reader = getReaderFromFileCache(context);
       String record;
       while ((record = reader.readLine()) != null) {
-        String[] station = record.split(",");
-        String USAF_WBAN = station[0] + station[1];
-        LatLong location = new LatLong(station[7], station[8]);
-        weatherStationsMap.put(USAF_WBAN, location);
+        WeatherStation station = new WeatherStation(record);
+        if (station.isValid()) {
+          weatherStationsMap.put(station.getUSAF_WBAN(), station.getLocation());
+        }
       }
       reader.close();
     }
@@ -65,9 +65,9 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
       GSOD_Text observation = GSOD_Text.parseCSVFromNOAA(input.toString());
-      LatLong location = weatherStationsMap.get(observation.getUSAF_WBAN());
-      if (location == null){
-        logger.info("Observation did not match station with USAF_WBAN = " + observation.getUSAF_WBAN());
+      LatLon location = weatherStationsMap.get(observation.getUSAF_WBAN());
+      if (location == null) {
+        logger.info("Did not find any station with USAF_WBAN = " + observation.getUSAF_WBAN());
         return;
       }
       observation.setLocation(location);
