@@ -8,6 +8,8 @@ import project.helperClasses.LatLon;
 
 public interface GSOD {
 
+  public String getUSAF();
+
   public String getUSAF_WBAN();
 
   public void setLocation(LatLon location);

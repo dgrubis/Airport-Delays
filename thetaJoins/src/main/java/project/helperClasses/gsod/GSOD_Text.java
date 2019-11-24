@@ -20,14 +20,20 @@ import project.helperClasses.LatLon;
  * average GSOD values.
  */
 public class GSOD_Text implements Writable, GSOD {
-  private String USAF_WBAN; // Air Force Station ID and Weather Bureau Air Force Navy number
+  private String USAF; // Air Force Station ID
+  private String WBAN; // Weather Bureau Air Force Navy number
   private LocalDate date;
   private LatLon location; // Must be provided from another dataset
   private Text data;
 
   @Override
   public String getUSAF_WBAN() {
-    return USAF_WBAN;
+    return USAF + "_" + WBAN;
+  }
+
+  @Override
+  public String getUSAF() {
+    return USAF;
   }
 
   @Override
@@ -51,7 +57,8 @@ public class GSOD_Text implements Writable, GSOD {
     // TODO: many of these values are represented as NULL via a 9999.9/999.9/99.9 entry. See documentation.
     //  Do we need to change this representation?
 
-    parsedGSOD.USAF_WBAN = splitRecord[0] + splitRecord[1];
+    parsedGSOD.USAF = splitRecord[0];
+    parsedGSOD.WBAN = splitRecord[1];
     parsedGSOD.date = parseDate(splitRecord[2]);
     parsedGSOD.location = null;
 

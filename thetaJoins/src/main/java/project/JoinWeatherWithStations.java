@@ -64,17 +64,20 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
-      GSOD_Text observation = GSOD_Text.parseCSVFromNOAA(input.toString());
-      LatLon location = weatherStationsMap.get(observation.getUSAF_WBAN());
+      GSOD_Text gsod = GSOD_Text.parseCSVFromNOAA(input.toString());
+
+      LatLon location = weatherStationsMap.containsKey(gsod.getUSAF_WBAN()) ?
+              weatherStationsMap.get(gsod.getUSAF_WBAN()) :
+              weatherStationsMap.get(gsod.getUSAF() + "_" + WeatherStation.DEFAULT_WBAN);
+
       if (location == null) {
-        logger.info("Did not find any station with USAF_WBAN = " + observation.getUSAF_WBAN());
+        logger.info("Did not find any station with USAF_WBAN = " + gsod.getUSAF_WBAN());
         return;
       }
-      observation.setLocation(location);
-      context.write(nullKey, observation);
+      gsod.setLocation(location);
+      context.write(nullKey, gsod);
     }
   }
-
 
   @Override
   public int run(final String[] args) throws Exception {

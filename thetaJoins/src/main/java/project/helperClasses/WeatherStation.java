@@ -5,6 +5,14 @@ package project.helperClasses;
  * information and latitude-longitude location.
  */
 public class WeatherStation {
+  public static final String DEFAULT_WBAN = "99999";
+
+  private static final int USAF = 1;
+  private static final int WBAN = 2;
+  private static final int LAT = 7;
+  private static final int LON = 8;
+  private static final int MIN_FIELDS = 9;
+
   private String USAF_WBAN; // Air Force Station ID and Weather Bureau Air Force Navy number
   private LatLon location;
 
@@ -16,11 +24,18 @@ public class WeatherStation {
    */
   public WeatherStation(String record) {
     String[] station = record.split(",");
-    USAF_WBAN = station[1] + station[2];
-    if (station.length < 9 || station[7].equals("") || station[8].equals("")) {
+
+    // NOAA stations data may truncate starting 0's for 5-digit WBAN's.
+    StringBuilder WBAN_Value = new StringBuilder(station[WBAN]);
+    while (WBAN_Value.length() < 5) {
+      WBAN_Value.insert(0, "0");
+    }
+
+    USAF_WBAN = station[USAF] + "_" + WBAN_Value;
+    if (station.length < MIN_FIELDS || station[LAT].equals("") || station[LON].equals("")) {
       location = null;
     } else {
-      location = new LatLon(station[7], station[8]);
+      location = new LatLon(station[LAT], station[LON]);
     }
   }
 
