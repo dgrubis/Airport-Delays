@@ -45,7 +45,7 @@ hs_err_pid*
 *.swp
 
 # output folders
-*/output/*
+# */output/*
 
 # input folders
 */input/*
