@@ -20,7 +20,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import project.helperClasses.LatLon;
 import project.helperClasses.WeatherStation;
@@ -39,6 +41,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
   public static class repJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
     // Using HashMap instead of MultiMap because each key identifies one station only
     private Map<String, LatLon> weatherStationsMap = new HashMap<>();
+    private Set<String> missingStations = new HashSet<>();
     private NullWritable nullKey = NullWritable.get();
 
     @Override
@@ -71,11 +74,20 @@ public class JoinWeatherWithStations extends Configured implements Tool {
               weatherStationsMap.get(gsod.getUSAF() + "_" + WeatherStation.DEFAULT_WBAN);
 
       if (location == null) {
-        logger.info("Did not find any station with USAF_WBAN = " + gsod.getUSAF_WBAN());
+        missingStations.add(gsod.getUSAF_WBAN());
         return;
       }
+
       gsod.setLocation(location);
       context.write(nullKey, gsod);
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      // report USAF/WBAN for weather observations that did not have a corresponding station
+      for (String miss : missingStations) {
+        logger.info("Did not find any station with USAF_WBAN = " + miss);
+      }
     }
   }
 
