@@ -7,6 +7,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Scanner;
 
 import project.helperClasses.LatLon;
 
@@ -23,7 +24,7 @@ public class GSOD_Text implements Writable, GSOD {
   private String USAF; // Air Force Station ID
   private String WBAN; // Weather Bureau Air Force Navy number
   private LocalDate date;
-  private LatLon location; // Must be provided from another dataset
+  private LatLon location;
   private Text data;
 
   @Override
@@ -44,7 +45,7 @@ public class GSOD_Text implements Writable, GSOD {
   /**
    * Parse a GSOD from a NOAA weather observation record string. Location data will be null.  MAX,
    * MIN, PRCP, and SNDP will be modified to strip extraneous flags and/or to reflect the data's
-   * actual value.  See NOAA documentation.  Data in the form 99.9/999.9/9999.9 indicates missing
+   * actual value.  See NOAA documentation.  Data in the form 99.9/999.9/9999.9 indicates a missing
    * data point.
    *
    * @param record an input record as described in NOAA weather documentation
@@ -62,34 +63,33 @@ public class GSOD_Text implements Writable, GSOD {
     parsedGSOD.date = parseDate(splitRecord[2]);
     parsedGSOD.location = null;
 
-    StringBuilder dataString = new StringBuilder();
-    dataString.append(splitRecord[3]);
-    dataString.append(",");
-    dataString.append(splitRecord[5]);
-    dataString.append(",");
-    dataString.append(splitRecord[7]);
-    dataString.append(",");
-    dataString.append(splitRecord[9]);
-    dataString.append(",");
-    dataString.append(splitRecord[11]);
-    dataString.append(",");
-    dataString.append(splitRecord[13]);
-    dataString.append(",");
-    dataString.append(splitRecord[15]);
-    dataString.append(",");
-    dataString.append(splitRecord[16]);
-    dataString.append(",");
-    dataString.append(parseMaxMinTemp(splitRecord[17]));
-    dataString.append(",");
-    dataString.append(parseMaxMinTemp(splitRecord[18]));
-    dataString.append(",");
-    dataString.append(parsePrecipitation(splitRecord[19]));
-    dataString.append(",");
-    dataString.append(parseSnowDepth(splitRecord[20]));
-    dataString.append(",");
-    dataString.append(splitRecord[21]);
-    dataString.append(",");
-    parsedGSOD.data = new Text(dataString.toString());
+    String dataString = splitRecord[3] +
+            "," +
+            splitRecord[5] +
+            "," +
+            splitRecord[7] +
+            "," +
+            splitRecord[9] +
+            "," +
+            splitRecord[11] +
+            "," +
+            splitRecord[13] +
+            "," +
+            splitRecord[15] +
+            "," +
+            splitRecord[16] +
+            "," +
+            parseMaxMinTemp(splitRecord[17]) +
+            "," +
+            parseMaxMinTemp(splitRecord[18]) +
+            "," +
+            parsePrecipitation(splitRecord[19]) +
+            "," +
+            parseSnowDepth(splitRecord[20]) +
+            "," +
+            splitRecord[21] +
+            ",";
+    parsedGSOD.data = new Text(dataString);
 
     return parsedGSOD;
   }
@@ -130,6 +130,21 @@ public class GSOD_Text implements Writable, GSOD {
       return "0.0";
     }
     return snow;
+  }
+
+  public static GSOD_Text parseCSVWithLatLon(String record) {
+    GSOD_Text parsedGSOD = new GSOD_Text();
+    Scanner scanner = new Scanner(record);
+    parsedGSOD.USAF = null;
+    parsedGSOD.WBAN = null;
+    parsedGSOD.date = LocalDate.parse(scanner.next());
+    String lat = scanner.next();
+    String lon = scanner.next();
+    parsedGSOD.location = new LatLon(lat, lon);
+    parsedGSOD.data = new Text(scanner.nextLine());
+
+    scanner.close();
+    return parsedGSOD;
   }
 
   @Override
