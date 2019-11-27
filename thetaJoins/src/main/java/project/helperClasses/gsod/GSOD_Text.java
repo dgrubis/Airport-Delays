@@ -7,7 +7,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Scanner;
+import java.util.StringTokenizer;
 
 import project.helperClasses.LatLon;
 
@@ -61,7 +61,7 @@ public class GSOD_Text implements Writable, GSOD {
     parsedGSOD.USAF = splitRecord[0];
     parsedGSOD.WBAN = splitRecord[1];
     parsedGSOD.date = parseDate(splitRecord[2]);
-    parsedGSOD.location = null;
+    parsedGSOD.location = null; // Must be added separately or parsed using a different method
 
     String dataString = splitRecord[3] +
             "," +
@@ -132,20 +132,29 @@ public class GSOD_Text implements Writable, GSOD {
     return snow;
   }
 
+  /**
+   * Parse a GSOD from a String that contains location data (obtained from toString() of another
+   * GSOD). USAF/WBAN data will be null. Data in the form 99.9/999.9/9999.9 indicates a missing data
+   * point.  Should not be used to parse raw GSOD data from NOAA (see parseCSVFromNOAA).
+   *
+   * @param record an input record produced by another GSOD
+   * @return a parsed GSOD
+   */
   public static GSOD_Text parseCSVWithLatLon(String record) {
     GSOD_Text parsedGSOD = new GSOD_Text();
-    Scanner scanner = new Scanner(record);
-    parsedGSOD.USAF = null;
+    StringTokenizer tokens = new StringTokenizer(record, ",");
+    parsedGSOD.USAF = null; // Must be obtained via a different parsing function
     parsedGSOD.WBAN = null;
-    parsedGSOD.date = LocalDate.parse(scanner.next());
-    String lat = scanner.next();
-    String lon = scanner.next();
+    parsedGSOD.date = LocalDate.parse(tokens.nextToken());
+    String lat = tokens.nextToken();
+    String lon = tokens.nextToken();
     parsedGSOD.location = new LatLon(lat, lon);
-    parsedGSOD.data = new Text(scanner.nextLine());
+    String data = tokens.nextToken("\n").substring(1);
+    parsedGSOD.data = new Text(data);
 
-    scanner.close();
     return parsedGSOD;
   }
+
 
   @Override
   public void write(DataOutput out) throws IOException {
