@@ -1,6 +1,5 @@
 package project.helperClasses.gsod;
 
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -25,7 +24,7 @@ public class GSOD_Text implements Writable, GSOD {
   private String WBAN; // Weather Bureau Air Force Navy number
   private LocalDate date;
   private LatLon location;
-  private Text data;
+  private String data;
 
   @Override
   public String getUSAF_WBAN() {
@@ -89,7 +88,7 @@ public class GSOD_Text implements Writable, GSOD {
             "," +
             splitRecord[21] +
             ",";
-    parsedGSOD.data = new Text(dataString);
+    parsedGSOD.data = dataString;
 
     return parsedGSOD;
   }
@@ -150,7 +149,7 @@ public class GSOD_Text implements Writable, GSOD {
     String lon = tokens.nextToken();
     parsedGSOD.location = new LatLon(lat, lon);
     String data = tokens.nextToken("\n").substring(1);
-    parsedGSOD.data = new Text(data);
+    parsedGSOD.data = data;
 
     return parsedGSOD;
   }
@@ -166,7 +165,7 @@ public class GSOD_Text implements Writable, GSOD {
     out.writeInt(date.getDayOfMonth());
     out.writeDouble(location.getLatitude());
     out.writeDouble(location.getLongitude());
-    data.write(out);
+    out.writeBytes(data + "\n");
   }
 
   @Override
@@ -174,14 +173,12 @@ public class GSOD_Text implements Writable, GSOD {
     int year = in.readInt();
     int month = in.readInt();
     int day = in.readInt();
-    this.date = LocalDate.of(year, month, day);
+    date = LocalDate.of(year, month, day);
 
     double latitude = in.readDouble();
     double longitude = in.readDouble();
-    this.location = new LatLon(latitude, longitude);
-
-    this.data = new Text();
-    data.readFields(in);
+    location = new LatLon(latitude, longitude);
+    data = in.readLine();
   }
 
   @Override

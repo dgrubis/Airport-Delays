@@ -1,6 +1,5 @@
 package project.helperClasses;
 
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -19,7 +18,7 @@ public class Flight implements Writable {
   private String destIATA;
   private LatLon originLocation;
   private LatLon destLocation;
-  private Text data;
+  private String data;
 
   public void setOriginLocation(LatLon originLocation) {
     this.originLocation = originLocation;
@@ -62,7 +61,7 @@ public class Flight implements Writable {
     data += "," + tokens[17]; // Distance in miles
     data += tokens.length > 25 && tokens[25].equals("B") ? ",1" : ",0"; // Flag for weather cancellation
     data += tokens.length == 31 ? "," + tokens[30] + "," : ",0,"; // Weather delay in minutes
-    flight.data = new Text(data);
+    flight.data = data;
 
     return flight;
   }
@@ -76,13 +75,13 @@ public class Flight implements Writable {
     out.writeInt(date.getYear());
     out.writeInt(date.getMonthValue());
     out.writeInt(date.getDayOfMonth());
-    out.writeChars(originIATA + "\n");
-    out.writeChars(destIATA + "\n");
+    out.writeBytes(originIATA + "\n");
+    out.writeBytes(destIATA + "\n");
     out.writeDouble(originLocation.getLatitude());
     out.writeDouble(originLocation.getLongitude());
     out.writeDouble(destLocation.getLatitude());
     out.writeDouble(destLocation.getLongitude());
-    data.write(out);
+    out.writeBytes(data + "\n");
   }
 
   @Override
@@ -101,9 +100,7 @@ public class Flight implements Writable {
     latitude = in.readDouble();
     longitude = in.readDouble();
     destLocation = new LatLon(latitude, longitude);
-
-    data = new Text();
-    data.readFields(in);
+    data = in.readLine();
   }
 
   @Override
