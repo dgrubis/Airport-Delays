@@ -11,6 +11,9 @@ public class Airport {
 
   public static Airport parseCSVFromDOT(String record) {
     String[] splitString = record.split(",");
+    if (splitString.length < 6) {
+      throw new IllegalArgumentException("Invalid airport with IATA = " + splitString[0]);
+    }
     Airport airport = new Airport();
     airport.IATA_Code = splitString[0];
     airport.location = new LatLon(splitString[5], splitString[6]);
@@ -29,6 +32,11 @@ public class Airport {
 
   public LocalDate getDate() {
     return date;
+  }
+
+  @Override
+  public String toString() {
+    return IATA_Code + "," + location + ",";
   }
 }
 

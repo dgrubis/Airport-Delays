@@ -10,6 +10,8 @@ import java.util.PrimitiveIterator;
 
 import project.helperClasses.LatLon;
 
+// TODO: this class is not finished or tested. Use if we need to average weather observation data
+
 /**
  * Global surface summary of the day produced by the National Climatic Data Center (NCDC) and
  * available through the National Oceanic and Atmospheric Administration (NOAA).  An instance of
@@ -172,7 +174,6 @@ public class GSOD_Values implements Writable, GSOD {
     out.writeDouble(location.getLongitude());
   }
 
-  // TODO: finish class, if needed
   @Override
   public void readFields(DataInput in) throws IOException {
 

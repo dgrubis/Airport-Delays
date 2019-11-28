@@ -187,8 +187,10 @@ public class GSOD_Text implements Writable, GSOD {
   @Override
   public String toString() {
     if (location == null) {
-      throw new IllegalStateException("Cannot output a string for a GSOD without location data.");
+      //Format: DATE,TEMP,DEWP,SLP,STP,VISIB,WDSP,MXSPD,GUST,MAX,MIN,PRCP,SNDP,FRSHTT,
+      return date + "," + data;
     }
+
     //Format: DATE,LATITUDE,LONGITUDE,TEMP,DEWP,SLP,STP,VISIB,WDSP,MXSPD,GUST,MAX,MIN,PRCP,SNDP,FRSHTT,
     return date + "," + location + "," + data;
   }

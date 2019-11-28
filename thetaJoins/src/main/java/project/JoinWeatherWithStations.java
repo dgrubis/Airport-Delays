@@ -3,7 +3,6 @@ package project;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -106,8 +105,8 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     job.setNumReduceTasks(0);
 
     // Key and Value type for output
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(GSOD.class);
 
     // Path for input and output
     FileInputFormat.addInputPath(job, new Path(args[0]));
