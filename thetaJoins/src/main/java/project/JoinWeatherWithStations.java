@@ -37,7 +37,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(JoinWeatherWithStations.class);
   private static final String FILE_LABEL = "fileLabel";
 
-  public static class repJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
+  public static class RepJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
     // Using HashMap instead of MultiMap because each key identifies one station only
     private Map<String, LatLon> weatherStationsMap = new HashMap<>();
     private Set<String> missingStations = new HashSet<>();
@@ -101,7 +101,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     jobConf.set("mapreduce.output.textoutputformat.separator", ",");
 
     // Classes for mapper, combiner and reducer
-    job.setMapperClass(repJoinMapper.class);
+    job.setMapperClass(RepJoinMapper.class);
     job.setNumReduceTasks(0);
 
     // Key and Value type for output

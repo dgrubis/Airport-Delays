@@ -6,6 +6,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.StringTokenizer;
 
 /**
  * U.S. domestic large flight data published by the Department of Transportation (DOT).  An instance
@@ -62,6 +63,23 @@ public class Flight implements Writable {
     data += tokens.length > 25 && tokens[25].equals("B") ? ",1" : ",0"; // Flag for weather cancellation
     data += tokens.length == 31 ? "," + tokens[30] + "," : ",0,"; // Weather delay in minutes
     flight.data = data;
+
+    return flight;
+  }
+
+  public static Flight parseCSVWithLatLon(String record) {
+    Flight flight = new Flight();
+    StringTokenizer tokens = new StringTokenizer(record, ",");
+    flight.date = LocalDate.parse(tokens.nextToken());
+    flight.originIATA = tokens.nextToken();
+    String lat = tokens.nextToken();
+    String lon = tokens.nextToken();
+    flight.originLocation = new LatLon(lat, lon);
+    flight.destIATA = tokens.nextToken();
+    lat = tokens.nextToken();
+    lon = tokens.nextToken();
+    flight.destLocation = new LatLon(lat, lon);
+    flight.data = tokens.nextToken("\n").substring(1);
 
     return flight;
   }

@@ -148,8 +148,8 @@ public class GSOD_Text implements Writable, GSOD {
     String lat = tokens.nextToken();
     String lon = tokens.nextToken();
     parsedGSOD.location = new LatLon(lat, lon);
-    String data = tokens.nextToken("\n").substring(1);
-    parsedGSOD.data = data;
+    parsedGSOD.data = tokens.nextToken("\n").substring(1);
+    ;
 
     return parsedGSOD;
   }

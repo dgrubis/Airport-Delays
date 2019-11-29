@@ -7,7 +7,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -35,7 +34,7 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(JoinFlightsWithAirports.class);
   private static final String FILE_LABEL = "fileLabel";
 
-  public static class repJoinMapper extends Mapper<Object, Text, NullWritable, Flight> {
+  public static class RepJoinMapper extends Mapper<Object, Text, NullWritable, Flight> {
     // Using HashMap instead of MultiMap because each key identifies one airport only
     private Map<String, LatLon> airportsMap = new HashMap<>();
     private Set<String> missingAirports = new HashSet<>();
@@ -93,16 +92,6 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
     }
   }
 
-  public static class IntSumReducer extends Reducer<NullWritable, Flight, NullWritable, Flight> {
-
-    @Override
-    public void reduce(final NullWritable key, final Iterable<Flight> values, final Context context) throws IOException, InterruptedException {
-      for (Flight flight : values) {
-        context.write(key, flight);
-      }
-    }
-  }
-
   @Override
   public int run(final String[] args) throws Exception {
 
@@ -114,9 +103,8 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
     jobConf.set("mapreduce.output.textoutputformat.separator", ",");
 
     // Classes for mapper, combiner and reducer
-    job.setMapperClass(repJoinMapper.class);
-    job.setReducerClass(IntSumReducer.class);
-    //job.setNumReduceTasks(0);
+    job.setMapperClass(RepJoinMapper.class);
+    job.setNumReduceTasks(0);
 
     // Key and Value type for output
     job.setOutputKeyClass(NullWritable.class);

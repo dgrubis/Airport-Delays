@@ -3,15 +3,23 @@ package project.helperClasses;
 import java.time.LocalDate;
 
 public class Airport {
+  private static final int FIELD_COUNT = 6;
 
   private String IATA_Code; // Id code from International Air Transport Association
   private LatLon location;
   private LocalDate date;
 
 
+  /**
+   * Parse an airport record from a Department of Transportation (DOT) record string. Date
+   * information will be null (this field is only used for a particular join strategy).
+   *
+   * @param record an airport input record
+   * @return a parsed Airport
+   */
   public static Airport parseCSVFromDOT(String record) {
     String[] splitString = record.split(",");
-    if (splitString.length < 6) {
+    if (splitString.length < FIELD_COUNT) {
       throw new IllegalArgumentException("Invalid airport with IATA = " + splitString[0]);
     }
     Airport airport = new Airport();
@@ -36,7 +44,10 @@ public class Airport {
 
   @Override
   public String toString() {
-    return IATA_Code + "," + location + ",";
+    if (date == null) {
+      return IATA_Code + "," + location + ",";
+    }
+    return IATA_Code + "," + location + "," + date + ",";
   }
 }
 
