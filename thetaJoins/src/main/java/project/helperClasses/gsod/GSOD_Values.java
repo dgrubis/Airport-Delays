@@ -57,6 +57,16 @@ public class GSOD_Values implements Writable, GSOD {
   }
 
   @Override
+  public LocalDate getDate() {
+    return date;
+  }
+
+  @Override
+  public LatLon getLocation() {
+    return location;
+  }
+
+  @Override
   public void setLocation(LatLon location) {
     this.location = location;
   }

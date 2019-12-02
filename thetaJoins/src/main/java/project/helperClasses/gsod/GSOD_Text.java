@@ -19,6 +19,7 @@ import project.helperClasses.LatLon;
  * This version of a GSOD is more efficient than value-based GSOD storage, but cannot be used to
  * average GSOD values.
  */
+//TODO: the version of GSOD_Text with location data can be a separate class extending GSOD_Text
 public class GSOD_Text implements Writable, GSOD {
   private String USAF; // Air Force Station ID
   private String WBAN; // Weather Bureau Air Force Navy number
@@ -34,6 +35,16 @@ public class GSOD_Text implements Writable, GSOD {
   @Override
   public String getUSAF() {
     return USAF;
+  }
+
+  @Override
+  public LocalDate getDate() {
+    return date;
+  }
+
+  @Override
+  public LatLon getLocation() {
+    return location;
   }
 
   @Override
@@ -148,8 +159,7 @@ public class GSOD_Text implements Writable, GSOD {
     String lat = tokens.nextToken();
     String lon = tokens.nextToken();
     parsedGSOD.location = new LatLon(lat, lon);
-    parsedGSOD.data = tokens.nextToken("\n").substring(1);
-    ;
+    parsedGSOD.data = tokens.nextToken("\n").substring(1).replace(" ", "");
 
     return parsedGSOD;
   }

@@ -25,11 +25,11 @@ import java.util.Random;
 
 import project.helperClasses.Flight;
 import project.helperClasses.FlightOrGSOD;
+import project.helperClasses.LatLon;
 import project.helperClasses.gsod.GSOD;
 import project.helperClasses.gsod.GSOD_Text;
 
 public class JoinFlightsWithWeather extends Configured implements Tool {
-
   private static final Logger logger = LogManager.getLogger(JoinFlightsWithAirports.class);
 
   public static class GSOD_Mapper extends Mapper<Object, Text, IntWritable, FlightOrGSOD> {
@@ -109,6 +109,13 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
 
   public static class FlightGSODReducer extends Reducer<IntWritable, FlightOrGSOD, NullWritable, Flight> {
     NullWritable nullKey = NullWritable.get();
+    long totalHits = 0;
+    double distanceRadius;
+
+    @Override
+    protected void setup(Context context) throws IOException, InterruptedException {
+      distanceRadius = context.getConfiguration().getDouble("Distance Radius", 0.0);
+    }
 
     @Override
     public void reduce(final IntWritable key, final Iterable<FlightOrGSOD> values, final Context context)
@@ -126,18 +133,48 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
         }
       }
 
+      // Compare each flight's origin and destination with each weather observation.
+      // ASSUMPTION: the origin and destination for a flight will not match the same observation.
       for (Flight f : flights) {
         for (GSOD g : GSODs) {
-          if (dateAndLocationMatch(f, g)) {
-            // TODO: emit some stuff
+          if (dateLocationMatchOrigin(f, g)) {
+            f.setOriginGSOD(g);
+            context.write(nullKey, f);
+            totalHits++;
+          } else if (dateLocationMatchDest(f, g)) {
+            f.setDestGSOD(g);
+            context.write(nullKey, f);
+            totalHits++;
+          } else {
+            logger.info("No observation hits for flight: " + f.toString());
           }
         }
       }
     }
 
-    private boolean dateAndLocationMatch(Flight f, GSOD g) {
-      // TODO: write this function
-      return true;
+    private boolean dateLocationMatchOrigin(Flight f, GSOD g) {
+      if (!f.getDate().equals(g.getDate())) {
+        return false;
+      }
+      LatLon flightLoc = f.getOriginLocation();
+      LatLon destLoc = g.getLocation();
+      return flightLoc.distanceInMiles(destLoc) <= distanceRadius;
+    }
+
+    private boolean dateLocationMatchDest(Flight f, GSOD g) {
+      if (!f.getDate().equals(g.getDate())) {
+        return false;
+      }
+      LatLon flightLoc = f.getDestLocation();
+      LatLon destLoc = g.getLocation();
+      return flightLoc.distanceInMiles(destLoc) <= distanceRadius;
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      Counter total = context.getCounter(
+              "Partition Counters", "Total Hits");
+      total.increment(totalHits);
     }
   }
 
@@ -165,6 +202,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     job.setMapOutputValueClass(FlightOrGSOD.class);
 
     broadcastAB(args, job);
+    job.getConfiguration().setDouble("Distance Radius", Double.parseDouble(args[6]));
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
@@ -193,8 +231,8 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
   }
 
   public static void main(final String[] args) {
-    if (args.length != 6) {
-      throw new Error("Three arguments required: <gsod_file> <flight_file> <outputDir> <S> <T> <R>");
+    if (args.length != 7) {
+      throw new Error("Seven arguments required: <gsod_file> <flight_file> <outputDir> <S> <T> <R> <radius>");
     }
 
     try {

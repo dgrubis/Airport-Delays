@@ -3,6 +3,7 @@ package project.helperClasses.gsod;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.time.LocalDate;
 
 import project.helperClasses.LatLon;
 
@@ -17,5 +18,9 @@ public interface GSOD {
   public void write(DataOutput out) throws IOException;
 
   public void readFields(DataInput in) throws IOException;
+
+  public LocalDate getDate();
+
+  public LatLon getLocation();
 
 }
