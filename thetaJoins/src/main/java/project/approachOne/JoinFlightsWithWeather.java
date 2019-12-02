@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -20,6 +21,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import project.helperClasses.Flight;
 import project.helperClasses.FlightOrGSOD;
@@ -34,20 +36,37 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     private final IntWritable regionId = new IntWritable();
     private int a;
     private int b;
+    Random randGenerator = new Random();
+    long totalEmittedGSODs;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
       a = context.getConfiguration().getInt("A", 0);
       b = context.getConfiguration().getInt("B", 0);
+      totalEmittedGSODs = 0;
     }
 
     @Override
     public void map(final Object key, final Text input, final Context context)
             throws IOException, InterruptedException {
       GSOD gsod = GSOD_Text.parseCSVWithLatLon(input.toString());
-      // TODO: replace with 1-Bucket row assignment
-      regionId.set(0);
-      context.write(regionId, new FlightOrGSOD(gsod));
+
+      // Emit this GSOD for all regions in the selected row
+      int randRow = randGenerator.nextInt(a);
+      int minKey = randRow * b;
+      int maxKey = (randRow * b + b - 1);
+      for (int i = minKey; i <= maxKey; i++) {
+        regionId.set(i);
+        context.write(regionId, new FlightOrGSOD(gsod));
+        totalEmittedGSODs++;
+      }
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      Counter total = context.getCounter(
+              "Partition Counters", "Emitted GSODs");
+      total.increment(totalEmittedGSODs);
     }
   }
 
@@ -55,20 +74,36 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     private final IntWritable regionId = new IntWritable();
     private int a;
     private int b;
+    Random randGenerator = new Random();
+    long totalEmittedFlights;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
       a = context.getConfiguration().getInt("A", 0);
       b = context.getConfiguration().getInt("B", 0);
+      totalEmittedFlights = 0;
     }
 
     @Override
     public void map(final Object key, final Text input, final Context context)
             throws IOException, InterruptedException {
       Flight flight = Flight.parseCSVWithLatLon(input.toString());
-      // TODO: replace with 1-Bucket column assignment
-      regionId.set(0);
-      context.write(regionId, new FlightOrGSOD(flight));
+
+      // Emit this Flight for all regions in the selected column
+      int randCol = randGenerator.nextInt(b);
+      int maxKey = (a - 1) * b + randCol;
+      for (int i = randCol; i <= maxKey; i += b) {
+        regionId.set(i);
+        context.write(regionId, new FlightOrGSOD(flight));
+        totalEmittedFlights++;
+      }
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      Counter total = context.getCounter(
+              "Partition Counters", "Emitted Flights");
+      total.increment(totalEmittedFlights);
     }
   }
 
@@ -154,6 +189,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
     job.getConfiguration().setInt("A", a);
     job.getConfiguration().setInt("B", b);
+    logger.info("For theta-join: A is " + a + "; B is " + b);
   }
 
   public static void main(final String[] args) {
