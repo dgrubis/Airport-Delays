@@ -36,9 +36,9 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
 
   public static class RepJoinMapper extends Mapper<Object, Text, NullWritable, Flight> {
     // Using HashMap instead of MultiMap because each key identifies one airport only
-    private Map<String, LatLon> airportsMap = new HashMap<>();
-    private Set<String> missingAirports = new HashSet<>();
-    private NullWritable nullKey = NullWritable.get();
+    private final Map<String, LatLon> airportsMap = new HashMap<>();
+    private final Set<String> missingAirports = new HashSet<>();
+    private final NullWritable nullKey = NullWritable.get();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -122,7 +122,7 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
 
   public static void main(final String[] args) {
     if (args.length != 3) {
-      throw new Error("Three arguments required:\n<inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
+      throw new Error("Three arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
     }
 
     try {

@@ -39,9 +39,9 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
   public static class RepJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
     // Using HashMap instead of MultiMap because each key identifies one station only
-    private Map<String, LatLon> weatherStationsMap = new HashMap<>();
-    private Set<String> missingStations = new HashSet<>();
-    private NullWritable nullKey = NullWritable.get();
+    private final Map<String, LatLon> weatherStationsMap = new HashMap<>();
+    private final Set<String> missingStations = new HashSet<>();
+    private final NullWritable nullKey = NullWritable.get();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -120,7 +120,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
   public static void main(final String[] args) {
     if (args.length != 3) {
-      throw new Error("Three arguments required:\n<inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
+      throw new Error("Three arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
     }
 
     try {

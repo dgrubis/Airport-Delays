@@ -18,6 +18,21 @@ public class FlightOrGSOD implements Writable {
   private Text data;
   private boolean isFlight;
 
+  public FlightOrGSOD() {
+    data = new Text();
+    isFlight = true;
+  }
+
+  public FlightOrGSOD(Flight flight) {
+    this.data = new Text(flight.toString());
+    isFlight = true;
+  }
+
+  public FlightOrGSOD(GSOD gsod) {
+    this.data = new Text(gsod.toString());
+    isFlight = false;
+  }
+
   public boolean isFlight() {
     return isFlight;
 
