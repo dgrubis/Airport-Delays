@@ -15,6 +15,7 @@ import project.helperClasses.gsod.GSOD;
  * of this class represents a single flight.
  */
 // TODO: the variation on this class (with or without location or climate data) can be separated into classes that extend Flight
+//TODO: origin and destination can be their own classes
 public class Flight implements Writable {
 
   private LocalDate date;
@@ -86,6 +87,8 @@ public class Flight implements Writable {
 
     String data = "";
     data += tokens[4]; // Airline
+    data += tokens[5]; // Flight number
+    data += tokens[6]; // Tail number
     data += "," + tokens[17]; // Distance in miles
     data += tokens.length > 25 && tokens[25].equals("B") ? ",1" : ",0"; // Flag for weather cancellation
     data += tokens.length == 31 ? "," + tokens[30] + "," : ",0,"; // Weather delay in minutes
@@ -120,6 +123,30 @@ public class Flight implements Writable {
     return flight;
   }
 
+  //TODO: finish this
+  public static Flight parseCSVWithLatLonWeather(String record) {
+    Flight flight = new Flight();
+
+    // DATE,ORIGIN,ORIGIN_LAT,ORIGIN_LONG,DEST,DEST_LAT,DEST_LON,AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY,ORIGIN_GSOD,DEST_GSOD
+
+
+    String[] tokens = record.split(",");
+    flight.date = LocalDate.parse(tokens[0]);
+    flight.originIATA = tokens[1];
+    flight.originLocation = new LatLon(tokens[2], tokens[3]);
+    flight.destIATA = tokens[4];
+    flight.destLocation = new LatLon(tokens[5], tokens[6]);
+    flight.data = tokens[7] + "," + tokens[8] + "," + tokens[9] + "," + tokens[10] + ","
+            + tokens[11] + "," + tokens[12] + ",";
+    if (!tokens[14].equals("null")) {
+      String gsod = tokens[15] + "," + tokens[16] + tokens[17] + tokens[18] + tokens[19] + tokens[20];
+    }
+
+    //Format: DATE,LATITUDE,LONGITUDE,TEMP,DEWP,SLP,STP,VISIB,WDSP,MXSPD,GUST,MAX,MIN,PRCP,SNDP,FRSHTT,
+
+
+    return flight;
+  }
 
   @Override
   // Will not write weather information (GSOD)
@@ -162,17 +189,17 @@ public class Flight implements Writable {
   @Override
   public String toString() {
     if (originLocation == null || destLocation == null) {
-      // DATE,ORIGIN,DEST,AIRLINE,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY
+      // DATE,ORIGIN,DEST,AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY
       return date.toString() + "," + originIATA + "," + destIATA + "," + data;
     }
 
     if (originGSOD == null && destGSOD == null) {
-      // DATE,ORIGIN,ORIGIN_LAT,ORIGIN_LONG,DEST,DEST_LAT,DEST_LON,AIRLINE,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY
+      // DATE,ORIGIN,ORIGIN_LAT,ORIGIN_LONG,DEST,DEST_LAT,DEST_LON,AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY
       return date.toString() + "," + originIATA + "," + originLocation + ","
               + destIATA + "," + destLocation + "," + data;
     }
 
-    // DATE,ORIGIN,ORIGIN_LAT,ORIGIN_LONG,DEST,DEST_LAT,DEST_LON,AIRLINE,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY,ORIGIN_GSOD,DEST_GSOD
+    // DATE,ORIGIN,ORIGIN_LAT,ORIGIN_LONG,DEST,DEST_LAT,DEST_LON,AIRLINE,FLIGHT_NUMBER,TAIL_NUMBER,DISTANCE,WEATHER_CANCELLATION,WEATHER_DELAY,,ORIGIN_GSOD,DEST_GSOD
     return date.toString() + "," + originIATA + "," + originLocation + ","
             + destIATA + "," + destLocation + "," + data
             + originGSOD + "," + destGSOD;
