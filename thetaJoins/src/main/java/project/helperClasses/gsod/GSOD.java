@@ -19,7 +19,7 @@ import project.helperClasses.LatLon;
  * This version of a GSOD is more efficient than value-based GSOD storage, but cannot be used to
  * average GSOD values.
  */
-//TODO: the version of GSOD_Text with location data can be a separate class extending GSOD_Text
+//TODO: the version of GSOD with location data can be a separate class extending GSOD
 public class GSOD implements Writable {
   private String USAF; // Air Force Station ID
   private String WBAN; // Weather Bureau Air Force Navy number

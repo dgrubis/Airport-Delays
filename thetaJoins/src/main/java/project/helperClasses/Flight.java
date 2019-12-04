@@ -93,7 +93,7 @@ public class Flight implements Writable {
     data += "," + tokens[6]; // Tail number
     data += "," + tokens[17]; // Distance in miles
     data += tokens.length > 25 && tokens[25].equals("B") ? ",1" : ",0"; // Flag for weather cancellation
-    data += tokens.length == 31 ? "," + tokens[30] + "," : ",0,"; // Weather delay in minutes
+    data += tokens.length == 31 ? ",1," + tokens[30] + "," : ",0,0,"; // Weather delay flag, weather delay in minutes
     flight.data = data;
 
     return flight;
@@ -130,7 +130,7 @@ public class Flight implements Writable {
 
     String[] tokens = record.split(",\\s*");
     if (tokens.length < 30) {
-      throw new IllegalArgumentException("Invalid input string. Data is missing");
+      throw new IllegalArgumentException("Invalid input string. Data is missing.");
     }
 
     // Parse flight data:
@@ -140,16 +140,16 @@ public class Flight implements Writable {
     flight.destIATA = tokens[4];
     flight.destLocation = new LatLon(tokens[5], tokens[6]);
     flight.data = tokens[7] + "," + tokens[8] + "," + tokens[9] + "," + tokens[10] + ","
-            + tokens[11] + "," + tokens[12] + ",";
+            + tokens[11] + "," + tokens[12] + "," + tokens[13] + ",";
 
     // If origin weather data is found:
-    if (!tokens[13].equals("null")) {
-      String gsodOrig = Arrays.toString(Arrays.copyOfRange(tokens, 13, 29));
+    if (!tokens[14].equals("null")) {
+      String gsodOrig = Arrays.toString(Arrays.copyOfRange(tokens, 14, 30));
       flight.originGSOD = GSOD.parseCSVWithLatLon(gsodOrig.substring(1, gsodOrig.length() - 1) + ",");
 
       // If origin and destination weather data is found:
-      if (!tokens[30].equals("null")) {
-        String gsodDest = Arrays.toString(Arrays.copyOfRange(tokens, 30, 46));
+      if (!tokens[31].equals("null")) {
+        String gsodDest = Arrays.toString(Arrays.copyOfRange(tokens, 31, 47));
         flight.destGSOD = GSOD.parseCSVWithLatLon(gsodDest.substring(1, gsodDest.length() - 1) + ",");
       } else {
         flight.destGSOD = null;
@@ -158,7 +158,7 @@ public class Flight implements Writable {
       // If only destination weather data is found:
     } else {
       flight.originGSOD = null;
-      String gsodString = Arrays.toString(Arrays.copyOfRange(tokens, 15, 31));
+      String gsodString = Arrays.toString(Arrays.copyOfRange(tokens, 16, 32));
       flight.destGSOD = GSOD.parseCSVWithLatLon(gsodString.substring(1, gsodString.length() - 1) + ",");
     }
 
@@ -234,8 +234,7 @@ public class Flight implements Writable {
       if (in.readBoolean()) { // and if it is origin weather data
         originGSOD = new GSOD();
         originGSOD.readFields(in);
-      }
-      else { // or if it is destination weather data
+      } else { // or if it is destination weather data
         destGSOD = new GSOD();
         destGSOD.readFields(in);
       }
