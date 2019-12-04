@@ -152,7 +152,7 @@ public class GSOD_Text implements Writable, GSOD {
    */
   public static GSOD_Text parseCSVWithLatLon(String record) {
     GSOD_Text parsedGSOD = new GSOD_Text();
-    StringTokenizer tokens = new StringTokenizer(record, ",");
+    StringTokenizer tokens = new StringTokenizer(record, ",\\s*");
     parsedGSOD.USAF = null; // Must be obtained via a different parsing function
     parsedGSOD.WBAN = null;
     parsedGSOD.date = LocalDate.parse(tokens.nextToken());
