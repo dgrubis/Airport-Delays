@@ -19,7 +19,7 @@ object DTmodelMain {
     val sparkSession = SparkSession.builder 
                        .appName("DecisionTreeModel")
                        .config(conf)
-                       .getOrCreate()
+                       .getOrCreate() 
     
     val df = sparkSession.read.option("inferSchema","true").csv(args(0)).toDF() //read in the joined data as a dataframe                 
     
