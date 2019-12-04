@@ -26,7 +26,6 @@ import java.util.Set;
 import project.helperClasses.LatLon;
 import project.helperClasses.WeatherStation;
 import project.helperClasses.gsod.GSOD;
-import project.helperClasses.gsod.GSOD_Text;
 
 /**
  * Preprocessing job to equi-join weather stations data with weather observations data, producing a
@@ -66,7 +65,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
-      GSOD_Text gsod = GSOD_Text.parseCSVFromNOAA(input.toString());
+      GSOD gsod = GSOD.parseCSVFromNOAA(input.toString());
 
       LatLon location = weatherStationsMap.containsKey(gsod.getUSAF_WBAN()) ?
               weatherStationsMap.get(gsod.getUSAF_WBAN()) :

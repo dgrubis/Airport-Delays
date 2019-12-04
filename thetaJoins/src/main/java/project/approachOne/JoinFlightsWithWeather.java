@@ -27,7 +27,6 @@ import project.helperClasses.Flight;
 import project.helperClasses.FlightOrGSOD;
 import project.helperClasses.LatLon;
 import project.helperClasses.gsod.GSOD;
-import project.helperClasses.gsod.GSOD_Text;
 
 /**
  * Joins airplane flight records with weather observation records to produce a dataset of flights
@@ -64,7 +63,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     @Override
     public void map(final Object key, final Text input, final Context context)
             throws IOException, InterruptedException {
-      GSOD gsod = GSOD_Text.parseCSVWithLatLon(input.toString());
+      GSOD gsod = GSOD.parseCSVWithLatLon(input.toString());
 
       // Emit this GSOD for all regions in the selected row
       int randRow = randGenerator.nextInt(a);

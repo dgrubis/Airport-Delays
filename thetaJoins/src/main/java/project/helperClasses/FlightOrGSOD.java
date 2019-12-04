@@ -8,7 +8,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import project.helperClasses.gsod.GSOD;
-import project.helperClasses.gsod.GSOD_Text;
 
 /**
  * Wrapper class that represents either a Flight or a GSOD. Used to pass both Flights and GSODs to
@@ -49,7 +48,7 @@ public class FlightOrGSOD implements Writable {
     if (isFlight()) {
       throw new IllegalStateException("Cannot generate GSOD data. This instance is a Flight record");
     }
-    return GSOD_Text.parseCSVWithLatLon(data.toString());
+    return GSOD.parseCSVWithLatLon(data.toString());
   }
 
   @Override

@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.StringTokenizer;
 
 import project.helperClasses.gsod.GSOD;
-import project.helperClasses.gsod.GSOD_Text;
 
 /**
  * U.S. domestic large flight data published by the Department of Transportation (DOT).  An instance
@@ -146,12 +145,12 @@ public class Flight implements Writable {
     // If origin weather data is found:
     if (!tokens[13].equals("null")) {
       String gsodOrig = Arrays.toString(Arrays.copyOfRange(tokens, 13, 29));
-      flight.originGSOD = GSOD_Text.parseCSVWithLatLon(gsodOrig.substring(1, gsodOrig.length() - 1) + ",");
+      flight.originGSOD = GSOD.parseCSVWithLatLon(gsodOrig.substring(1, gsodOrig.length() - 1) + ",");
 
       // If origin and destination weather data is found:
       if (!tokens[30].equals("null")) {
         String gsodDest = Arrays.toString(Arrays.copyOfRange(tokens, 30, 46));
-        flight.destGSOD = GSOD_Text.parseCSVWithLatLon(gsodDest.substring(1, gsodDest.length() - 1) + ",");
+        flight.destGSOD = GSOD.parseCSVWithLatLon(gsodDest.substring(1, gsodDest.length() - 1) + ",");
       } else {
         flight.destGSOD = null;
       }
@@ -160,7 +159,7 @@ public class Flight implements Writable {
     } else {
       flight.originGSOD = null;
       String gsodString = Arrays.toString(Arrays.copyOfRange(tokens, 15, 31));
-      flight.destGSOD = GSOD_Text.parseCSVWithLatLon(gsodString.substring(1, gsodString.length() - 1) + ",");
+      flight.destGSOD = GSOD.parseCSVWithLatLon(gsodString.substring(1, gsodString.length() - 1) + ",");
     }
 
     return flight;
@@ -233,11 +232,11 @@ public class Flight implements Writable {
     destGSOD = null;
     if (in.readBoolean()) { // if weather data exists
       if (in.readBoolean()) { // and if it is origin weather data
-        originGSOD = new GSOD_Text();
+        originGSOD = new GSOD();
         originGSOD.readFields(in);
       }
       else { // or if it is destination weather data
-        destGSOD = new GSOD_Text();
+        destGSOD = new GSOD();
         destGSOD.readFields(in);
       }
     }
