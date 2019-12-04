@@ -3,7 +3,6 @@ package project;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -20,12 +19,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import project.helperClasses.LatLon;
 import project.helperClasses.WeatherStation;
 import project.helperClasses.gsod.GSOD;
-import project.helperClasses.gsod.GSOD_Text;
 
 /**
  * Preprocessing job to equi-join weather stations data with weather observations data, producing a
@@ -36,10 +36,11 @@ public class JoinWeatherWithStations extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(JoinWeatherWithStations.class);
   private static final String FILE_LABEL = "fileLabel";
 
-  public static class repJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
+  public static class RepJoinMapper extends Mapper<Object, Text, NullWritable, GSOD> {
     // Using HashMap instead of MultiMap because each key identifies one station only
-    private Map<String, LatLon> weatherStationsMap = new HashMap<>();
-    private NullWritable nullKey = NullWritable.get();
+    private final Map<String, LatLon> weatherStationsMap = new HashMap<>();
+    private final Set<String> missingStations = new HashSet<>();
+    private final NullWritable nullKey = NullWritable.get();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -64,18 +65,27 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
-      GSOD_Text gsod = GSOD_Text.parseCSVFromNOAA(input.toString());
+      GSOD gsod = GSOD.parseCSVFromNOAA(input.toString());
 
       LatLon location = weatherStationsMap.containsKey(gsod.getUSAF_WBAN()) ?
               weatherStationsMap.get(gsod.getUSAF_WBAN()) :
               weatherStationsMap.get(gsod.getUSAF() + "_" + WeatherStation.DEFAULT_WBAN);
 
       if (location == null) {
-        logger.info("Did not find any station with USAF_WBAN = " + gsod.getUSAF_WBAN());
+        missingStations.add(gsod.getUSAF_WBAN());
         return;
       }
+
       gsod.setLocation(location);
       context.write(nullKey, gsod);
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      // report USAF/WBAN for weather observations that did not have a corresponding station
+      for (String miss : missingStations) {
+        logger.info("Did not find any station with USAF_WBAN = " + miss);
+      }
     }
   }
 
@@ -90,12 +100,12 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     jobConf.set("mapreduce.output.textoutputformat.separator", ",");
 
     // Classes for mapper, combiner and reducer
-    job.setMapperClass(repJoinMapper.class);
+    job.setMapperClass(RepJoinMapper.class);
     job.setNumReduceTasks(0);
 
     // Key and Value type for output
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(GSOD.class);
 
     // Path for input and output
     FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -109,7 +119,7 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
   public static void main(final String[] args) {
     if (args.length != 3) {
-      throw new Error("Three arguments required:\n<inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
+      throw new Error("Three arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
     }
 
     try {
