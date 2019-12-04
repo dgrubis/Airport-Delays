@@ -16,7 +16,7 @@ object DTmodelMain {
     }
     
     val conf = new SparkConf()
-    val sparkSession = SparkSession.builder
+    val sparkSession = SparkSession.builder 
                        .appName("DecisionTreeModel")
                        .config(conf)
                        .getOrCreate()
