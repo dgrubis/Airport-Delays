@@ -172,6 +172,12 @@ public class Flight implements Writable {
     if (originLocation == null || destLocation == null) {
       throw new IllegalStateException("Cannot emit a Flight without location data.");
     }
+    if (originGSOD != null && destGSOD != null) {
+      throw new IllegalArgumentException(
+              "There is no need to emit a Flight with both origin and destination weather data.");
+    }
+
+    // Send flight data
     out.writeInt(date.getYear());
     out.writeInt(date.getMonthValue());
     out.writeInt(date.getDayOfMonth());
@@ -181,6 +187,24 @@ public class Flight implements Writable {
     out.writeDouble(originLocation.getLongitude());
     out.writeDouble(destLocation.getLatitude());
     out.writeDouble(destLocation.getLongitude());
+
+    // Send weather data as applicable
+    boolean hasWeatherData = false;
+    boolean hasOriginWeatherData = false;
+    if (originGSOD != null) {
+      hasWeatherData = true;
+      hasOriginWeatherData = true;
+      out.writeBoolean(hasWeatherData);
+      out.writeBoolean(hasOriginWeatherData);
+    } else if (destGSOD != null) {
+      hasWeatherData = true;
+      out.writeBoolean(hasWeatherData);
+      out.writeBoolean(hasOriginWeatherData);
+    } else {
+      out.writeBoolean(hasWeatherData);
+    }
+
+    // Send text data
     out.writeBytes(data + "\n");
   }
 
@@ -188,6 +212,7 @@ public class Flight implements Writable {
   // Will not read weather information (GSOD)
   public void readFields(DataInput in) throws IOException {
 
+    // Read flight data
     int year = in.readInt();
     int month = in.readInt();
     int day = in.readInt();
@@ -195,12 +220,29 @@ public class Flight implements Writable {
     originIATA = in.readLine();
     destIATA = in.readLine();
 
+    // Read location data
     double latitude = in.readDouble();
     double longitude = in.readDouble();
     originLocation = new LatLon(latitude, longitude);
     latitude = in.readDouble();
     longitude = in.readDouble();
     destLocation = new LatLon(latitude, longitude);
+
+    // Read weather data as applicable
+    originGSOD = null;
+    destGSOD = null;
+    if (in.readBoolean()) { // if weather data exists
+      if (in.readBoolean()) { // and if it is origin weather data
+        originGSOD = new GSOD_Text();
+        originGSOD.readFields(in);
+      }
+      else { // or if it is destination weather data
+        destGSOD = new GSOD_Text();
+        destGSOD.readFields(in);
+      }
+    }
+
+    // Read text data
     data = in.readLine();
   }
 
