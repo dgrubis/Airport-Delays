@@ -93,7 +93,8 @@ public class Flight implements Writable {
     data += "," + tokens[6]; // Tail number
     data += "," + tokens[17]; // Distance in miles
     data += tokens.length > 25 && tokens[25].equals("B") ? ",1" : ",0"; // Flag for weather cancellation
-    data += tokens.length == 31 ? ",1," + tokens[30] + "," : ",0,0,"; // Weather delay flag, weather delay in minutes
+    data += (tokens.length == 31 && !tokens[30].equals("0")) ? ",1," + tokens[30] + ","
+            : ",0,0,"; // Weather delay flag, weather delay in minutes
     flight.data = data;
 
     return flight;
