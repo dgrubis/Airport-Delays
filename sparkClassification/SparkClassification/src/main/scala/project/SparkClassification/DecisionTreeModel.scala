@@ -30,6 +30,9 @@ object DTmodelMain {
     val LabelIndexer = new StringIndexer()
                            .setInputCol("WEATHER_DELAY")
                            .setOutputCol("label")
-                           .fit(df)
+                           .fit(df) //sets the label column to be used in the algorithm as the weather delay flag (0 for no delay, 1 else)
+    
+                           
+  
   }
 }
