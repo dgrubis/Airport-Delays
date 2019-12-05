@@ -73,7 +73,7 @@ object DTmodelMain {
     val auc = new BinaryClassificationEvaluator()
                        .setLabelCol("WEATHER_DELAY")
                        .setMetricName("areaUnderROC") //measure accuracy of model with AUC
-                       //only supported metric?
+                       //only supported metric? 
                        
   }
 }
