@@ -51,7 +51,7 @@ object DTmodelMain {
     val FeatureIndexer = new VectorAssembler()
                              .setInputCols(myFeatures)
                              .setOutputCol("features") //sets the feature vector as one column consisting of all specified features                   
-    
+     
                              
   }
 }
