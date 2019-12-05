@@ -124,6 +124,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
   public static class FlightGSODReducer extends Reducer<IntWritable, FlightOrGSOD, NullWritable, Flight> {
     NullWritable nullKey = NullWritable.get();
     long totalHits = 0;
+    long totalMisses = 0;
     double distanceRadius;
 
     @Override
@@ -156,17 +157,20 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
           if (dateLocationMatchOrigin(f, g)) {
             f.setOriginGSOD(g);
             context.write(nullKey, f);
+            f.setOriginGSOD(null);
             totalHits++;
             foundHit = true;
           } else if (dateLocationMatchDest(f, g)) {
             f.setDestGSOD(g);
             context.write(nullKey, f);
+            f.setDestGSOD(null);
             totalHits++;
             foundHit = true;
           }
         }
         if (!foundHit) {
           logger.info("No observation hits for flight: " + f);
+          totalMisses++;
         }
       }
     }
@@ -191,9 +195,13 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-      Counter total = context.getCounter(
+      Counter totalH = context.getCounter(
               "Partition Counters", "Total Hits");
-      total.increment(totalHits);
+      totalH.increment(totalHits);
+
+      Counter totalM = context.getCounter(
+              "Partition Counters", "Total Misses");
+      totalM.increment(totalMisses);
     }
   }
 
@@ -246,6 +254,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
     job.getConfiguration().setInt("A", a);
     job.getConfiguration().setInt("B", b);
+    job.setNumReduceTasks(a * b);
     logger.info("For theta-join: A is " + a + "; B is " + b);
   }
 
