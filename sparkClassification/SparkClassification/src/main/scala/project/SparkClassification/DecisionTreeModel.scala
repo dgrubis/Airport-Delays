@@ -9,7 +9,7 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
 
 object DTmodelMain {
@@ -59,8 +59,21 @@ object DTmodelMain {
      
     val modelData = FeatureIndexer.transform(df) //add the feature vector to the dataframe
     
-    val Array(trainingData, testData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
+    val Array(trainingData, testingData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
     
+    val dtModel = new DecisionTreeClassifier()
+                      .setFeaturesCol("features")
+                      .setLabelCol("WEATHER_DELAY")
+                      .setImpurity("entropy")
+                      .setMaxDepth(10)
+                      .fit(trainingData) //fits a decision tree classifier on the training data with set hyper-parameters
+                     
+    val predictionData = dtModel.transform(testingData) //append the predictions and probabilities to the dataframe
     
+    val auc = new BinaryClassificationEvaluator()
+                       .setLabelCol("WEATHER_DELAY")
+                       .setMetricName("areaUnderROC") //measure accuracy of model with AUC
+                       //only supported metric?
+                       
   }
 }
