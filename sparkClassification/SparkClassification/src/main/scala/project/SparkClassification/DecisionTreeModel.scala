@@ -17,7 +17,7 @@ object DTmodelMain {
   def main(args: Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
     if (args.length != 2) {
-      logger.error("Usage:\nRS_DMain <input dir> <output dir>")
+      logger.error("Usage:\nDTmodelMain <input dir> <output dir>")
       System.exit(1)
     }
     
@@ -27,14 +27,19 @@ object DTmodelMain {
                        .config(conf)
                        .getOrCreate() 
     
-    val df = sparkSession.read.option("inferSchema","true").csv(args(0)).toDF() //read in the joined data as a dataframe
-                                                                                //may need to name columns manually
-    
-    //val LabelIndexer = new StringIndexer()
-                           //.setInputCol("WEATHER_DELAY")
-                           //.setOutputCol("label")
-                           //.fit(df)
-    //WEATHER_DELAY is already a 0 or 1 flag
+    val df = sparkSession.read.option("inferSchema","true")
+                         .csv(args(0))
+                         .toDF("DATE", "ORIGIN", "ORIGIN_LAT", "ORIGIN_LONG",	
+                               "DEST", "DEST_LAT", "DEST_LON", "AIRLINE",	
+                               "FLIGHT_NUMBER", "TAIL_NUMBER", "DISTANCE",
+                               "WEATHER_CANCELLATION", "WEATHER_DELAY",
+                               "WEATHER_DELAY_MINUTES", "DATE_O", "LATITUDE_O",
+                               "LONGITUDE_O", "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
+                               "WDSP_O", "MXSPD_O", "GUST_O", "MAX_O", "MIN_O", "PRCP_O", "SNDP_O",
+                               "FRSHTT_O", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
+                               "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
+                               "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", "FRSHTT_D") //read in the joined data as a dataframe
+                                                                                
                            
     val myFeatures = Array("ORIGIN_LAT", "ORIGIN_LONG",
                          "DEST_LAT", "DEST_LON", "AIRLINE",
@@ -52,6 +57,10 @@ object DTmodelMain {
                              .setInputCols(myFeatures)
                              .setOutputCol("features") //sets the feature vector as one column consisting of all specified features                   
      
-                             
+    val modelData = FeatureIndexer.transform(df) //add the feature vector to the dataframe
+    
+    val Array(trainingData, testData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
+    
+    
   }
 }
