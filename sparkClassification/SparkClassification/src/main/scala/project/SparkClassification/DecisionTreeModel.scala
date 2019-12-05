@@ -45,13 +45,13 @@ object DTmodelMain {
                          "DEST_LAT", "DEST_LON", "AIRLINE",
                          "TAIL_NUMBER",	"DISTANCE",
                          //Origin
-                         "TEMP", "DEWP", "SLP", "STP", "VISIB",
-                         "WDSP", "MXSPD", "GUST",	"MAX", "MIN",	"PRCP",
-                         "SNDP", "FRSHTT",
+                         "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
+                         "WDSP_O", "MXSPD_O", "GUST_O",	"MAX_O", "MIN_O",	"PRCP_O",
+                         "SNDP_O", "FRSHTT_O",
                          //Destination
-                         "TEMP", "DEWP", "SLP", "STP", "VISIB",
-                         "WDSP", "MXSPD", "GUST",	"MAX", "MIN",	"PRCP",
-                         "SNDP", "FRSHTT")
+                         "TEMP_D", "DEWP_D", "SLP_D", "STP_D", "VISIB_D",
+                         "WDSP_D", "MXSPD_D", "GUST_D",	"MAX_D", "MIN_D",	"PRCP_D",
+                         "SNDP_D", "FRSHTT_D")
      
     val FeatureIndexer = new VectorAssembler()
                              .setInputCols(myFeatures)
