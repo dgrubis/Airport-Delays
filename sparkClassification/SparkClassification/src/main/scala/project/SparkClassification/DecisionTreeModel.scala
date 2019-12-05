@@ -74,6 +74,11 @@ object DTmodelMain {
                        .setLabelCol("WEATHER_DELAY")
                        .setMetricName("areaUnderROC") //measure accuracy of model with AUC
                        //only supported metric? 
+                       .evaluate(predictionData)
+                     
+    println("AUC of Decision Tree Model is " + auc)
+    
+    //TODO: look at cross-validation methods to find optimal hyper-parameters
                        
   }
 }
