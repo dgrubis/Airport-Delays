@@ -1,0 +1,9 @@
+[
+    {
+      "Classification": "mapred-site",
+      "Properties": {
+        "mapreduce.reduce.memory.mb": "9126",
+        "mapreduce.reduce.java.opts": "-Xmx7374m"
+      }
+    }
+  ]

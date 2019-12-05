@@ -23,7 +23,7 @@ public class WeatherStation {
    * @param record a NOAA weather station record.
    */
   public WeatherStation(String record) {
-    String[] station = record.split(",");
+    String[] station = record.split(",\\s*");
 
     // NOAA stations data may truncate starting 0's for 5-digit WBAN's.
     StringBuilder WBAN_Value = new StringBuilder(station[WBAN]);

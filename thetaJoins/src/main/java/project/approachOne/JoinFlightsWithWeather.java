@@ -3,12 +3,14 @@ package project.approachOne;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -26,6 +28,7 @@ import java.util.Random;
 import project.helperClasses.Flight;
 import project.helperClasses.FlightOrGSOD;
 import project.helperClasses.LatLon;
+import project.helperClasses.RegionId;
 import project.helperClasses.gsod.GSOD;
 
 /**
@@ -46,8 +49,11 @@ import project.helperClasses.gsod.GSOD;
 public class JoinFlightsWithWeather extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(JoinFlightsWithWeather.class);
 
-  public static class GSOD_Mapper extends Mapper<Object, Text, IntWritable, FlightOrGSOD> {
-    private final IntWritable regionId = new IntWritable();
+  /**
+   * Maps all GSOD weather data to random rows within the A x B partition matrix.
+   */
+  public static class GSOD_Mapper extends Mapper<Object, Text, RegionId, FlightOrGSOD> {
+    private final RegionId regionId = new RegionId();
     private int a;
     private int b;
     Random randGenerator = new Random();
@@ -70,7 +76,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
       int minKey = randRow * b;
       int maxKey = (randRow * b + b - 1);
       for (int i = minKey; i <= maxKey; i++) {
-        regionId.set(i);
+        regionId.set(i, true);
         context.write(regionId, new FlightOrGSOD(gsod));
         totalEmittedGSODs++;
       }
@@ -84,8 +90,11 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
   }
 
-  public static class FlightMapper extends Mapper<Object, Text, IntWritable, FlightOrGSOD> {
-    private final IntWritable regionId = new IntWritable();
+  /**
+   * Maps all flight data to random columns within the A x B partition matrix.
+   */
+  public static class FlightMapper extends Mapper<Object, Text, RegionId, FlightOrGSOD> {
+    private final RegionId regionId = new RegionId();
     private int a;
     private int b;
     Random randGenerator = new Random();
@@ -107,7 +116,7 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
       int randCol = randGenerator.nextInt(b);
       int maxKey = (a - 1) * b + randCol;
       for (int i = randCol; i <= maxKey; i += b) {
-        regionId.set(i);
+        regionId.set(i, false);
         context.write(regionId, new FlightOrGSOD(flight));
         totalEmittedFlights++;
       }
@@ -121,7 +130,12 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
   }
 
-  public static class FlightGSODReducer extends Reducer<IntWritable, FlightOrGSOD, NullWritable, Flight> {
+  /**
+   * Compares each received GSOD to each received Flight, producing a 'hit' when the dates match and
+   * the weather observation is within a certain radius of the flight's origin or destination.
+   * Secondary sort is used to reduce memory overhead.
+   */
+  public static class FlightGSODReducer extends Reducer<RegionId, FlightOrGSOD, NullWritable, Flight> {
     NullWritable nullKey = NullWritable.get();
     long totalHits = 0;
     long totalMisses = 0;
@@ -133,44 +147,38 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
 
     @Override
-    public void reduce(final IntWritable key, final Iterable<FlightOrGSOD> values, final Context context)
+    public void reduce(final RegionId key, final Iterable<FlightOrGSOD> values, final Context context)
             throws IOException, InterruptedException {
-      //TODO: secondary sort might make this more memory-efficient
-      List<Flight> flights = new LinkedList<>();
       List<GSOD> GSODs = new LinkedList<>();
 
-      // Populate the lists
       for (FlightOrGSOD o : values) {
-        if (o.isFlight()) {
-          flights.add(o.getFlight());
-        } else {
+        if (!o.isFlight()) {
+          // GSOD list will be filled first due to secondary sort.
           GSODs.add(o.getGSOD());
-        }
-      }
-
-      // Compare each flight's origin and destination with each weather observation.
-      // ASSUMPTION: the origin and destination for a flight will not match the same observation.
-      boolean foundHit;
-      for (Flight f : flights) {
-        foundHit = false;
-        for (GSOD g : GSODs) {
-          if (dateLocationMatchOrigin(f, g)) {
-            f.setOriginGSOD(g);
-            context.write(nullKey, f);
-            f.setOriginGSOD(null);
-            totalHits++;
-            foundHit = true;
-          } else if (dateLocationMatchDest(f, g)) {
-            f.setDestGSOD(g);
-            context.write(nullKey, f);
-            f.setDestGSOD(null);
-            totalHits++;
-            foundHit = true;
+        } else {
+          // Compare the flight's origin and destination with each weather observation.
+          // ASSUMPTION: the origin and destination for a flight will not match the same observation.
+          Flight f = o.getFlight();
+          boolean foundHit = false;
+          for (GSOD g : GSODs) {
+            if (dateLocationMatchOrigin(f, g)) {
+              f.setOriginGSOD(g);
+              context.write(nullKey, f);
+              f.setOriginGSOD(null);
+              totalHits++;
+              foundHit = true;
+            } else if (dateLocationMatchDest(f, g)) {
+              f.setDestGSOD(g);
+              context.write(nullKey, f);
+              f.setDestGSOD(null);
+              totalHits++;
+              foundHit = true;
+            }
           }
-        }
-        if (!foundHit) {
-          logger.info("No observation hits for flight: " + f);
-          totalMisses++;
+          if (!foundHit) {
+            logger.info("No observation hits for flight: " + f);
+            totalMisses++;
+          }
         }
       }
     }
@@ -205,6 +213,34 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     }
   }
 
+  /**
+   * Partitioner to facilitate secondary sort. For composite key (regionID, isGSOD), only regionID
+   * is considered for partitioning.
+   */
+  public static class SecondarySortPartitioner extends Partitioner<RegionId, FlightOrGSOD> {
+    @Override
+    public int getPartition(RegionId regionId, FlightOrGSOD flightOrGSOD, int i) {
+      return regionId.getRegion() % i;
+    }
+  }
+
+  /**
+   * GroupComparator to facilitate secondary sort. For composite key (regionID, isGSOD), only
+   * regionID is considered for grouping.
+   */
+  public static class GroupComparator extends WritableComparator {
+    protected GroupComparator() {
+      super(RegionId.class, true);
+    }
+
+    @Override
+    public int compare(WritableComparable w1, WritableComparable w2) {
+      RegionId r1 = (RegionId) w1;
+      RegionId r2 = (RegionId) w2;
+      return Integer.compare(r1.getRegion(), r2.getRegion());
+    }
+  }
+
 
   @Override
   public int run(final String[] args) throws Exception {
@@ -216,16 +252,18 @@ public class JoinFlightsWithWeather extends Configured implements Tool {
     final Configuration jobConf = job.getConfiguration();
     jobConf.set("mapreduce.output.textoutputformat.separator", ",");
 
-    // Classes for mapper, combiner and reducer
+    // Classes for mappers, reducer, partitioner, and grouping comparator
     MultipleInputs.addInputPath(job, new Path(args[0]), TextInputFormat.class, GSOD_Mapper.class);
     MultipleInputs.addInputPath(job, new Path(args[1]), TextInputFormat.class, FlightMapper.class);
     FileOutputFormat.setOutputPath(job, new Path(args[2]));
     job.setReducerClass(FlightGSODReducer.class);
+    job.setPartitionerClass(SecondarySortPartitioner.class);
+    job.setGroupingComparatorClass(GroupComparator.class);
 
     // Key and Value type for output
     job.setOutputKeyClass(NullWritable.class);
     job.setOutputValueClass(Flight.class);
-    job.setMapOutputKeyClass(IntWritable.class);
+    job.setMapOutputKeyClass(RegionId.class);
     job.setMapOutputValueClass(FlightOrGSOD.class);
 
     broadcastAB(args, job);
