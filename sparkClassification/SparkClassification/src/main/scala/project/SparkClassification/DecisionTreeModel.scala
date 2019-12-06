@@ -9,7 +9,7 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
 
 object DTmodelMain {
@@ -45,13 +45,13 @@ object DTmodelMain {
                          "DEST_LAT", "DEST_LON", "AIRLINE",
                          "TAIL_NUMBER",	"DISTANCE",
                          //Origin
-                         "TEMP", "DEWP", "SLP", "STP", "VISIB",
-                         "WDSP", "MXSPD", "GUST",	"MAX", "MIN",	"PRCP",
-                         "SNDP", "FRSHTT",
+                         "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
+                         "WDSP_O", "MXSPD_O", "GUST_O",	"MAX_O", "MIN_O",	"PRCP_O",
+                         "SNDP_O", "FRSHTT_O",
                          //Destination
-                         "TEMP", "DEWP", "SLP", "STP", "VISIB",
-                         "WDSP", "MXSPD", "GUST",	"MAX", "MIN",	"PRCP",
-                         "SNDP", "FRSHTT")
+                         "TEMP_D", "DEWP_D", "SLP_D", "STP_D", "VISIB_D",
+                         "WDSP_D", "MXSPD_D", "GUST_D",	"MAX_D", "MIN_D",	"PRCP_D",
+                         "SNDP_D", "FRSHTT_D")
      
     val FeatureIndexer = new VectorAssembler()
                              .setInputCols(myFeatures)
@@ -59,8 +59,26 @@ object DTmodelMain {
      
     val modelData = FeatureIndexer.transform(df) //add the feature vector to the dataframe
     
-    val Array(trainingData, testData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
+    val Array(trainingData, testingData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
     
+    val dtModel = new DecisionTreeClassifier()
+                      .setFeaturesCol("features")
+                      .setLabelCol("WEATHER_DELAY")
+                      .setImpurity("entropy")
+                      .setMaxDepth(10)
+                      .fit(trainingData) //fits a decision tree classifier on the training data with set hyper-parameters
+                     
+    val predictionData = dtModel.transform(testingData) //append the predictions and probabilities to the dataframe
     
+    val auc = new BinaryClassificationEvaluator()
+                       .setLabelCol("WEATHER_DELAY")
+                       .setMetricName("areaUnderROC") //measure accuracy of model with AUC
+                       //only supported metric? 
+                       .evaluate(predictionData)
+                     
+    println("AUC of Decision Tree Model is " + auc)
+    
+    //TODO: look at cross-validation methods to find optimal hyper-parameters
+                       
   }
 }
