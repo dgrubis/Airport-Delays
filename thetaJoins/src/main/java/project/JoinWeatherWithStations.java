@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import project.helperClasses.LatLon;
@@ -41,6 +42,8 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     private final Map<String, LatLon> weatherStationsMap = new HashMap<>();
     private final Set<String> missingStations = new HashSet<>();
     private final NullWritable nullKey = NullWritable.get();
+    Random randGenerator = new Random(); // Used for random sampling of weather data
+    private double sampleRate;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -53,6 +56,9 @@ public class JoinWeatherWithStations extends Configured implements Tool {
         }
       }
       reader.close();
+
+      // Get sample rate
+      sampleRate = context.getConfiguration().getDouble("P", 0.0);
     }
 
     private BufferedReader getReaderFromFileCache(Context context) throws IOException, RuntimeException {
@@ -65,6 +71,12 @@ public class JoinWeatherWithStations extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
+      // Randomly sample weather data
+      double rand = randGenerator.nextDouble();
+      if (rand >= sampleRate) {
+        return;
+      }
+
       GSOD gsod = GSOD.parseCSVFromNOAA(input.toString());
 
       LatLon location = weatherStationsMap.containsKey(gsod.getUSAF_WBAN()) ?
@@ -114,12 +126,16 @@ public class JoinWeatherWithStations extends Configured implements Tool {
     // Set up distributed cache with a copy of weather station data
     job.addCacheFile(new URI(args[1] + "#" + FILE_LABEL));
 
+    // Broadcast user-specified sampling rate p
+    double sampleRate = Double.parseDouble(args[3]);
+    job.getConfiguration().setDouble("P", sampleRate);
+
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
   public static void main(final String[] args) {
-    if (args.length != 3) {
-      throw new Error("Three arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
+    if (args.length != 4) {
+      throw new Error("Four arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir> <sampleRate>");
     }
 
     try {

@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import project.JoinWeatherWithStations;
@@ -46,6 +47,9 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
     private final Map<String, LatLon> airportsMap = new HashMap<>();
     private final Set<String> missingAirports = new HashSet<>();
     private final NullWritable nullKey = NullWritable.get();
+    Random randGenerator = new Random(); // Used for random sampling of flight data
+    private double sampleRate;
+
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -61,6 +65,9 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
         airportsMap.put(airport.getIATA_Code(), airport.getLocation());
       }
       reader.close();
+
+      // Get sample rate
+      sampleRate = context.getConfiguration().getDouble("P", 0.0);
     }
 
     private BufferedReader getReaderFromFileCache(Context context) throws IOException, RuntimeException {
@@ -73,6 +80,12 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
 
     @Override
     public void map(final Object key, final Text input, final Context context) throws IOException, InterruptedException {
+      // Randomly sample flight data
+      double rand = randGenerator.nextDouble();
+      if (rand >= sampleRate) {
+        return;
+      }
+
       Flight flight = Flight.parseCSVFromDOT(input.toString());
       LatLon origin = airportsMap.get(flight.getOriginIATA());
       if (origin == null) {
@@ -124,12 +137,16 @@ public class JoinFlightsWithAirports extends Configured implements Tool {
     // Set up distributed cache with a copy of weather station data
     job.addCacheFile(new URI(args[1] + "#" + FILE_LABEL));
 
+    // Broadcast user-specified sampling rate p
+    double sampleRate = Double.parseDouble(args[3]);
+    job.getConfiguration().setDouble("P", sampleRate);
+
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
   public static void main(final String[] args) {
-    if (args.length != 3) {
-      throw new Error("Three arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir>");
+    if (args.length != 4) {
+      throw new Error("Four arguments required: <inputFileToBeRead> <inputFileToBeBroadcast> <outputDir> <sampleRate>");
     }
 
     try {
