@@ -49,9 +49,14 @@ hs_err_pid*
 
 # input folders
 */input/*
+*/input*/*
 
 # target folders
 */target/*
 
 # Makefiles (final Makefile should be submitted with project)
 Makefile
+
+# Misc
+logs*
+output_*
