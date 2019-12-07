@@ -60,3 +60,4 @@ Makefile
 # Misc
 logs*
 output_*
+aws_output*
