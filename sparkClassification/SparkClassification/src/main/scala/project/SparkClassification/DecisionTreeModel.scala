@@ -6,7 +6,6 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
@@ -46,12 +45,12 @@ object DTmodelMain {
                            
     val myFeatures = Array(
                          //Origin
-                         "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
-                         "WDSP_O", "MXSPD_O", "GUST_O",	"MAX_O", "MIN_O",	"PRCP_O",
+                         "TEMP_O", "DEWP_O", "VISIB_O",
+                         "WDSP_O",	"MAX_O", "MIN_O",
                          "SNDP_O", "FRSHTT_O",
                          //Destination
-                         "TEMP_D", "DEWP_D", "SLP_D", "STP_D", "VISIB_D",
-                         "WDSP_D", "MXSPD_D", "GUST_D",	"MAX_D", "MIN_D",	"PRCP_D",
+                         "TEMP_D", "DEWP_D", "VISIB_D",
+                         "WDSP_D",	"MAX_D", "MIN_D",
                          "SNDP_D", "FRSHTT_D")
      
     val FeatureIndexer = new VectorAssembler()
@@ -89,7 +88,7 @@ object DTmodelMain {
     
     //Uses cross-validation to find optimal hyper-parameters
     //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    
+    /*
                                   
     val gridSearch = new ParamGridBuilder()
                         .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
@@ -113,6 +112,6 @@ object DTmodelMain {
     
     println("AUC of Optimized Decision Tree Model is " + cvAUC)
     
-    
+    */
   }
 }
