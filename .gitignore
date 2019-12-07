@@ -60,3 +60,9 @@ Makefile
 # Misc
 logs*
 output_*
+thetaJoins/aws_output_2662482_flights.csv
+thetaJoins/inputfile
+thetaJoins/output/FinalOutput
+thetaJoins/output/.part-r-00000.crc
+thetaJoins/output/._SUCCESS.crc
+thetaJoins/output/_SUCCESS
