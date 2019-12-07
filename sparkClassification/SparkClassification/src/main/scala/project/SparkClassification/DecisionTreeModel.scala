@@ -13,6 +13,8 @@ import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 
+
+
 object DTmodelMain {
   
   def main(args: Array[String]) {
@@ -42,9 +44,7 @@ object DTmodelMain {
                                "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", "FRSHTT_D") //read in the joined data as a dataframe
                                                                                 
                            
-    val myFeatures = Array("ORIGIN_LAT", "ORIGIN_LONG",
-                         "DEST_LAT", "DEST_LON", "AIRLINE",
-                         "TAIL_NUMBER",	"DISTANCE",
+    val myFeatures = Array(
                          //Origin
                          "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
                          "WDSP_O", "MXSPD_O", "GUST_O",	"MAX_O", "MIN_O",	"PRCP_O",
@@ -61,25 +61,21 @@ object DTmodelMain {
     val LabelIndexer = new StringIndexer()
                            .setInputCol("WEATHER_DELAY")
                            .setOutputCol("label")    
-                           //need to send WEATHER_DELAY through a string indexer to build a pipeline for cross validation                         
-     
-    val FeatureVectorData = FeatureIndexer.transform(df) //add the feature vector to the dataframe as a new dataframe
+                           //need to send WEATHER_DELAY through a string indexer to build a pipeline                         
     
-    val modelData = LabelIndexer.fit(FeatureVectorData).transform(FeatureVectorData) //add the WEATHER_DELAY column as the label to the data to be used for training and testing                  
-    
-    val Array(trainingData, testingData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
+    val Array(trainingData, testingData) = df.randomSplit(Array(0.75, 0.25)) //split data into training and testing
     
     val dtClassifier = new DecisionTreeClassifier()
                       .setFeaturesCol("features")
                       .setLabelCol("label")
-                      .setImpurity("entropy")
-                      .setMaxDepth(10)
+                      .setImpurity("gini")
+                      .setMaxDepth(5)
                       //creates a decision tree classifier on the training data with set hyper-parameters
           
     val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, dtClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
-    
+   
     val dtModel = pipeline.fit(trainingData) //fit the model on the training data
-                     
+                 
     val predictionData = dtModel.transform(testingData) //append the predictions and probabilities to the dataframe
     
     val metricEvaluator = new BinaryClassificationEvaluator()
