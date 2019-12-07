@@ -10,7 +10,8 @@ import org.apache.spark.ml.classification.{RandomForestClassificationModel, Rand
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+import org.apache.spark.ml.feature.StringIndexer
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 
 object DTmodelMain {
   
@@ -78,7 +79,48 @@ object DTmodelMain {
                      
     println("AUC of Decision Tree Model is " + auc)
     
-    //TODO: look at cross-validation methods to find optimal hyper-parameters
-                       
+    //Uses cross-validation and defines a new pipeline to find optimal hyper-parameters
+    //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
+    
+    val dtCrossValidation = new DecisionTreeClassifier()
+                                .setFeaturesCol("features")
+                                .setLabelCol("WEATHER_DELAY")
+                                //define new decision tree model with no parameters set
+    
+    val aucCrossValidation = new BinaryClassificationEvaluator()
+                                 .setLabelCol("WEATHER_DELAY")
+                                 .setMetricName("areaUnderROC")
+                                 //define new evaluator to be used in cross validation
+                                  
+    val gridSearch = new ParamGridBuilder()
+                        .addGrid(dtCrossValidation.maxDepth, Array(5, 10, 20))
+                        .addGrid(dtCrossValidation.maxBins, Array(20, 25, 40))
+                        .addGrid(dtCrossValidation.impurity, Array("entropy", "gini"))
+                        .build()
+                        //specifies the parameters to be optimized in the model
+    
+    val LabelIndexer = new StringIndexer()
+                           .setInputCol("WEATHER_DELAY")
+                           .setOutputCol("label")    
+                           //need to send WEATHER_DELAY through a string indexer to build a pipeline for cross validation
+    
+    val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, dtCrossValidation)) //creates pipeline                  
+                        
+    val cv = new CrossValidator()
+                 .setEstimator(pipeline)
+                 .setEvaluator(aucCrossValidation)
+                 .setEstimatorParamMaps(gridSearch)
+                 .setNumFolds(10)
+                 //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
+    
+    val CVmodel = cv.fit(trainingData) //fit this new model
+    
+    val cvPredictionData = CVmodel.transform(testingData)
+    
+    val cvAUC = aucCrossValidation.evaluate(cvPredictionData)
+    
+    println("AUC of Optimized Decision Tree Model is " + cvAUC)
+    
+    
   }
 }
