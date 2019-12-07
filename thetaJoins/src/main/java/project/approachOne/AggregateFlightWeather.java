@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -25,16 +26,22 @@ import project.helperClasses.LatLon;
  */
 public class AggregateFlightWeather extends Configured implements Tool {
   private static final Logger logger = LogManager.getLogger(AggregateFlightWeather.class);
-  private static final int FOrigin_Lat = 3;
-  private static final int FOrigin_Lon = 4;
-  private static final int FDest_Lat = 6;
-  private static final int FDest_Lon = 7;
-  private static final int WOrigin_Lat = 16;
-  private static final int WOrigin_Lon = 17;
-  private static final int WDest_Lat = 18;
-  private static final int WDest_Lon = 19;
-  private static final int null_field = 15;
-  private static final int dest_data_start = 17;
+  private static final int FOrigin_Lat = 2;
+  private static final int FOrigin_Lon = 3;
+  private static final int FDest_Lat = 5;
+  private static final int FDest_Lon = 6;
+  private static final int WOrigin_Lat = 15;
+  private static final int WOrigin_Lon = 16;
+  private static final int WDest_Lat = 17;
+  private static final int WDest_Lon = 18;
+  private static final int null_field = 14;
+  private static final int dest_data_start = 16;
+  // Key fields:
+  private static final int key1 = 0;
+  private static final int key2 = 1;
+  private static final int key3 = 4;
+  private static final int key4 = 8;
+  private static final int key5 = 9;
 
   public static class FlightKeyMapper extends Mapper<Object, Text, Text, Text> {
 
@@ -43,18 +50,19 @@ public class AggregateFlightWeather extends Configured implements Tool {
         throws IOException, InterruptedException {
       String[] data = input.toString().split(",");
       // Set flight ID as key and whole row as the value
-      context.write(new Text(data[0]), input);
+      context.write(new Text(data[key1] + data[key2] + data[key3] + data[key4] + data[key5]), input);
     }
   }
 
   public static class FlightAggregationReducer extends Reducer<Text, Text, NullWritable, Text> {
     NullWritable nullKey = NullWritable.get();
+    int miss_counter = 0;
 
     @Override
     protected void reduce(Text flightKey, Iterable<Text> values, Context context)
         throws IOException, InterruptedException {
-      Text min_origin = new Text(); // The weather station data found closest to the flight origin
-      Text min_dest = new Text(); // The weather station data found closest to the flight destination
+      Text min_origin = null; // The weather station data found closest to the flight origin
+      Text min_dest = null; // The weather station data found closest to the flight destination
       int min_origin_dist = Integer.MAX_VALUE, min_dest_dist = Integer.MAX_VALUE;
 
       for (Text text : values) {
@@ -81,38 +89,48 @@ public class AggregateFlightWeather extends Configured implements Tool {
         }
       }
 
-      logger.info("Min Origin: " + min_origin);
-      logger.info("Min Dest: " + min_dest);
-      String[] OriginData = min_origin.toString().split(",");
-      String[] DestData = min_dest.toString().split(",");
+      if (min_origin != null && min_dest != null) {
+        String[] OriginData = min_origin.toString().split(",");
+        String[] DestData = min_dest.toString().split(",");
 
-      String[] FinalData = new String[150];
+        String[] FinalData = new String[150];
 
-      FinalData[0] = OriginData[0];
-      int i = 1;
-      //Copy the origin weather station data
-      for (int k = 1; k < OriginData.length; k++, i += 2) {
-        FinalData[i] = ",";
-        FinalData[i + 1] = OriginData[k];
+        FinalData[0] = OriginData[0];
+        int i = 1;
+        // Copy the origin weather station data
+        for (int k = 1; k < OriginData.length; k++, i += 2) {
+          FinalData[i] = ",";
+          FinalData[i + 1] = OriginData[k];
+        }
+
+        // Copy the destination weather station data
+        for (int j = dest_data_start; j < DestData.length; j++, i += 2) {
+          FinalData[i] = ",";
+          FinalData[i + 1] = DestData[j];
+        }
+
+        // Obtain string from string array
+        String str = "";
+        for (i = 0; i < FinalData.length; i++) {
+          if (i > 50 && FinalData[i] == null)
+            continue;
+          str += FinalData[i];
+        }
+
+        context.write(nullKey, new Text(str));
       }
-
-      //Copy the destination weather station data
-      for (int j = dest_data_start; j < DestData.length; j++, i += 2) {
-        FinalData[i] = ",";
-        FinalData[i + 1] = DestData[j];
+      else{
+        miss_counter++;
       }
-
-      //Obtain string from string array
-      String str = "";
-      for (i = 0; i < FinalData.length; i++) {
-        if (i > 50 && FinalData[i] == null)
-          continue;
-        str += FinalData[i];
-      }
-
-      context.write(nullKey, new Text(str));
+    }
+    
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+      Counter total = context.getCounter(
+              "Missed Flight Counter", "No Origin or Weather Station");
+      total.increment(miss_counter);
     }
   }
+
 
   @Override
   public int run(final String[] args) throws Exception {
