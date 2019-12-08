@@ -38,20 +38,22 @@ object DTmodelMain {
                                "WEATHER_DELAY_MINUTES", "DATE_O", "LATITUDE_O",
                                "LONGITUDE_O", "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
                                "WDSP_O", "MXSPD_O", "GUST_O", "MAX_O", "MIN_O", "PRCP_O", "SNDP_O",
-                               "FRSHTT_O","NULL1","NULL2", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
+                               "FRSHTT_1_O","FRSHTT_2_O", "FRSHTT_3_O", "FRSHTT_4_O", "FRSHTT_5_O", "FRSHTT_6_O",
+                               "NULL1", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
                                "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
-                               "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", "FRSHTT_D") //read in the joined data as a dataframe
+                               "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", 
+                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D") //read in the joined data as a dataframe
                                                                                 
                            
     val myFeatures = Array(
                          //Origin
                          "TEMP_O", "DEWP_O", "VISIB_O",
                          "WDSP_O",	"MAX_O", "MIN_O",
-                         "SNDP_O", "FRSHTT_O",
+                         "SNDP_O", "FRSHTT_1_O","FRSHTT_2_O", "FRSHTT_3_O", "FRSHTT_4_O", "FRSHTT_5_O", "FRSHTT_6_O",
                          //Destination
                          "TEMP_D", "DEWP_D", "VISIB_D",
                          "WDSP_D",	"MAX_D", "MIN_D",
-                         "SNDP_D", "FRSHTT_D")
+                         "SNDP_D", "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D")
      
     val FeatureIndexer = new VectorAssembler()
                              .setInputCols(myFeatures)
