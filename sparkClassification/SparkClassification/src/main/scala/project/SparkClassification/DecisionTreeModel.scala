@@ -42,7 +42,7 @@ object DTmodelMain {
                                "NULL1", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
                                "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
                                "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", 
-                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D") //read in the joined data as a dataframe
+                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D", "NULL2") //read in the joined data as a dataframe
                                                                                 
                            
     val myFeatures = Array(
@@ -90,20 +90,21 @@ object DTmodelMain {
     
     //Uses cross-validation to find optimal hyper-parameters
     //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    /*
+    
                                   
     val gridSearch = new ParamGridBuilder()
-                        .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
-                        .addGrid(dtClassifier.maxBins, Array(20, 25, 40))
+                        .addGrid(dtClassifier.maxDepth, Array(5, 8, 12))
+                        .addGrid(dtClassifier.maxBins, Array(20, 25, 32))
                         .addGrid(dtClassifier.impurity, Array("entropy", "gini"))
                         .build()
-                        //specifies the parameters to be optimized in the model
+                        //specifies the parameters to be optimized in the model by building a grid (here is a 3x3x2) search grid
                      
     val cv = new CrossValidator()
                  .setEstimator(pipeline)
                  .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
-                 .setNumFolds(10)
+                 .setNumFolds(5)
+                 .setParallelism(3) //adds parallelism to training to achieve greater speedup
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
     
     val CVmodel = cv.fit(trainingData) //fit this new model
@@ -114,6 +115,6 @@ object DTmodelMain {
     
     println("AUC of Optimized Decision Tree Model is " + cvAUC)
     
-    */
+    
   }
 }
