@@ -66,3 +66,5 @@ thetaJoins/output/FinalOutput
 thetaJoins/output/.part-r-00000.crc
 thetaJoins/output/._SUCCESS.crc
 thetaJoins/output/_SUCCESS
+sparkClassification/SparkClassification/input/FinalOutput.csv
+sparkClassification/SparkClassification/pom.xml
