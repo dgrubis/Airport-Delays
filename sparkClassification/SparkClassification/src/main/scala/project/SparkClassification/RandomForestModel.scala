@@ -6,7 +6,7 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
+import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.StringIndexer
@@ -14,7 +14,7 @@ import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 
 
 
-object DTmodelMain {
+object RFmodelMain {
   
   def main(args: Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
@@ -25,7 +25,7 @@ object DTmodelMain {
     
     val conf = new SparkConf()
     val sparkSession = SparkSession.builder 
-                       .appName("DecisionTreeModel")
+                       .appName("RandomForestModel")
                        .config(conf)
                        .getOrCreate() 
     
@@ -66,14 +66,15 @@ object DTmodelMain {
     
     val Array(trainingData, testingData) = df.randomSplit(Array(0.75, 0.25)) //split data into training and testing
     
-    val dtClassifier = new DecisionTreeClassifier()
+    val rfClassifier = new RandomForestClassifier()
                       .setFeaturesCol("features")
                       .setLabelCol("label")
                       .setImpurity("gini")
                       .setMaxDepth(5)
+                      .setNumTrees(100)
                       //creates a decision tree classifier on the training data with set hyper-parameters
           
-    val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, dtClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
+    val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, rfClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
    
     val dtModel = pipeline.fit(trainingData) //fit the model on the training data
                  
@@ -86,16 +87,17 @@ object DTmodelMain {
     
     val auc = metricEvaluator.evaluate(predictionData)
                      
-    println("AUC of Decision Tree Model is " + auc)
+    println("AUC of Random Forest Model is " + auc)
     
     //Uses cross-validation to find optimal hyper-parameters
     //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    /*
+    
                                   
     val gridSearch = new ParamGridBuilder()
-                        .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
-                        .addGrid(dtClassifier.maxBins, Array(20, 25, 40))
-                        .addGrid(dtClassifier.impurity, Array("entropy", "gini"))
+                        .addGrid(rfClassifier.maxDepth, Array(5, 7, 10, 20))
+                        .addGrid(rfClassifier.maxBins, Array(17, 20, 25, 40))
+                        .addGrid(rfClassifier.impurity, Array("entropy", "gini"))
+                        .addGrid(rfClassifier.numTrees, Array(10, 50, 100, 200))
                         .build()
                         //specifies the parameters to be optimized in the model
                      
@@ -112,8 +114,7 @@ object DTmodelMain {
     
     val cvAUC = metricEvaluator.evaluate(cvPredictionData)
     
-    println("AUC of Optimized Decision Tree Model is " + cvAUC)
+    println("AUC of Optimized Random Forest Model is " + cvAUC)
     
-    */
   }
 }
