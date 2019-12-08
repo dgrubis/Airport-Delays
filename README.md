@@ -33,9 +33,9 @@ Flight and Airport Dataset: https://www.kaggle.com/usdot/flight-delays/version/1
 
 # Build and Execution Steps
 All of the build & execution commands are organized in the Makefile.
-1) Unzip project file.
+1) Add downloaded files to input folder.
 2) Open command prompt.
-3) Navigate to directory where project files unzipped.
+3) Navigate to directory for the project you want to execute (thetajoin or classification).
 4) Edit the Makefile to customize the environment at the top.
 	Sufficient for standalone: hadoop.root, jar.name, local.input
 	Other defaults acceptable for running standalone.
