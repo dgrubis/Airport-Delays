@@ -1,4 +1,4 @@
-package project.approachOne;
+package project;
 
 import java.io.IOException;
 
