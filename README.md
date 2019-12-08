@@ -1,7 +1,7 @@
 Code author
 -----------
 Brian Rouse
-Derek Grubi
+Derek Grubis
 Harshit Gupta
 
 # CS 6240 Final Project
