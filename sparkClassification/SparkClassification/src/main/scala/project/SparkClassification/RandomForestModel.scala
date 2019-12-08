@@ -71,7 +71,7 @@ object RFmodelMain {
                       .setLabelCol("label")
                       .setImpurity("gini")
                       .setMaxDepth(5)
-                      .setNumTrees(500)
+                      .setNumTrees(100)
                       //creates a decision tree classifier on the training data with set hyper-parameters
           
     val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, rfClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
@@ -94,19 +94,19 @@ object RFmodelMain {
     
                                   
     val gridSearch = new ParamGridBuilder()
-                        .addGrid(rfClassifier.maxDepth, Array(5, 8, 12))
+                        .addGrid(rfClassifier.maxDepth, Array(5, 10))
                         .addGrid(rfClassifier.impurity, Array("entropy", "gini"))
-                        .addGrid(rfClassifier.numTrees, Array(50, 100, 200))
+                        .addGrid(rfClassifier.numTrees, Array(75, 150))
                         .build()
-                        //specifies the parameters to be optimized in the model (here is a 3x3x2x3) search grid)
-                        //switch bins for numTrees for random forest
+                        //specifies the parameters to be optimized in the model (here is a 2x2x2) search grid)
+                        //switch bins for numTrees for random forest and lower space due to memory constraints
                      
     val cv = new CrossValidator()
                  .setEstimator(pipeline)
                  .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
                  .setNumFolds(5)
-                 .setParallelism(5) //adds parallelism to training to achieve greater speedup
+                 .setParallelism(3) //adds parallelism to training to achieve greater speedup
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
     
     val CVmodel = cv.fit(trainingData) //fit this new model

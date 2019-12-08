@@ -104,7 +104,7 @@ object DTmodelMain {
                  .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
                  .setNumFolds(5)
-                 .setParallelism(5) //adds parallelism to training to achieve greater speedup
+                 .setParallelism(3) //adds parallelism to training to achieve greater speedup
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
     
     val CVmodel = cv.fit(trainingData) //fit this new model
