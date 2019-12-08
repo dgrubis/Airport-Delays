@@ -68,3 +68,5 @@ thetaJoins/output/._SUCCESS.crc
 thetaJoins/output/_SUCCESS
 sparkClassification/SparkClassification/input/FinalOutput.csv
 sparkClassification/SparkClassification/pom.xml
+.metals/metals.h2.db
+.metals/metals.lock.db
