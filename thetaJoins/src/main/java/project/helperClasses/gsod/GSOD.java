@@ -19,7 +19,6 @@ import project.helperClasses.LatLon;
  * This version of a GSOD is more efficient than value-based GSOD storage, but cannot be used to
  * average GSOD values.
  */
-//TODO: the version of GSOD with location data can be a separate class extending GSOD
 public class GSOD implements Writable {
   private String USAF; // Air Force Station ID
   private String WBAN; // Weather Bureau Air Force Navy number
@@ -47,6 +46,20 @@ public class GSOD implements Writable {
     this.location = location;
   }
 
+  public void splitFRSHTT() {
+    String[] dataArray = data.split(",\\s*");
+    String frshtt = dataArray[12];
+
+    String newFrshtt = "";
+    newFrshtt += frshtt.substring(0, 1);
+    newFrshtt += "," + frshtt.substring(1, 2);
+    newFrshtt += "," + frshtt.substring(2, 3);
+    newFrshtt += "," + frshtt.substring(3, 4);
+    newFrshtt += "," + frshtt.substring(4, 5);
+    newFrshtt += "," + frshtt.substring(5, 6) + ",";
+    data = data.substring(0, data.length() - 7) + newFrshtt;
+  }
+
   /**
    * Parse a GSOD from a NOAA weather observation record string. Location data will be null.  MAX,
    * MIN, PRCP, and SNDP will be modified to strip extraneous flags and/or to reflect the data's
@@ -59,9 +72,6 @@ public class GSOD implements Writable {
   public static GSOD parseCSVFromNOAA(String record) {
     String[] splitRecord = record.split(",\\s*");
     GSOD parsedGSOD = new GSOD();
-
-    // TODO: many of these values are represented as NULL via a 9999.9/999.9/99.9 entry. See documentation.
-    //  Do we need to change this representation?
 
     parsedGSOD.USAF = splitRecord[0];
     parsedGSOD.WBAN = splitRecord[1];

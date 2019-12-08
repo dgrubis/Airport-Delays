@@ -15,8 +15,6 @@ import project.helperClasses.gsod.GSOD;
  * U.S. domestic large flight data published by the Department of Transportation (DOT).  An instance
  * of this class represents a single flight.
  */
-// TODO: the variation on this class (with or without location or climate data) can be separated into classes that extend Flight
-//TODO: origin and destination can be their own classes
 public class Flight implements Writable {
 
   private LocalDate date;
@@ -62,6 +60,14 @@ public class Flight implements Writable {
 
   public LatLon getDestLocation() {
     return destLocation;
+  }
+
+  public GSOD getOriginGSOD() {
+    return originGSOD;
+  }
+
+  public GSOD getDestGSOD() {
+    return destGSOD;
   }
 
   /**
@@ -149,8 +155,8 @@ public class Flight implements Writable {
       flight.originGSOD = GSOD.parseCSVWithLatLon(gsodOrig.substring(1, gsodOrig.length() - 1) + ",");
 
       // If origin and destination weather data is found:
-      if (!tokens[31].equals("null")) {
-        String gsodDest = Arrays.toString(Arrays.copyOfRange(tokens, 31, 47));
+      if (!tokens[32].equals("null")) {
+        String gsodDest = Arrays.toString(Arrays.copyOfRange(tokens, 32, 48));
         flight.destGSOD = GSOD.parseCSVWithLatLon(gsodDest.substring(1, gsodDest.length() - 1) + ",");
       } else {
         flight.destGSOD = null;

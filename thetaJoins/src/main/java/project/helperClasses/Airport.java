@@ -5,7 +5,6 @@ import java.time.LocalDate;
 public class Airport {
   private static final int FIELD_COUNT = 6;
 
-  // TODO: the version of Airport that has a date can be a separate class extending airport
   private String IATA_Code; // Id code from International Air Transport Association
   private LatLon location;
   private LocalDate date; // Use when joining with dates

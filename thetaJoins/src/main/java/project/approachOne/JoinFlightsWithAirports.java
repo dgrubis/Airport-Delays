@@ -29,9 +29,6 @@ import project.helperClasses.Airport;
 import project.helperClasses.Flight;
 import project.helperClasses.LatLon;
 
-// TODO: a portion of flights are identifying airports by a value other than IATA. See log outputs.
-//  A handful of airports also do not provide lat/lon. Close to 500,000 flights do not find airports for 2015.
-
 /**
  * Preprocessing job to equi-join airport data with airplane flight record data, producing a dataset
  * of flights that includes the latitude and longitude of the origin/destination airports.
