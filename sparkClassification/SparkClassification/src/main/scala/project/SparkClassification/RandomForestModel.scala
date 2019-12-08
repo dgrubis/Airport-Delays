@@ -42,7 +42,7 @@ object RFmodelMain {
                                "NULL1", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
                                "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
                                "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", 
-                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D") //read in the joined data as a dataframe
+                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D", "NULL2") //read in the joined data as a dataframe
                                                                                 
                            
     val myFeatures = Array(
@@ -71,7 +71,7 @@ object RFmodelMain {
                       .setLabelCol("label")
                       .setImpurity("gini")
                       .setMaxDepth(5)
-                      .setNumTrees(100)
+                      .setNumTrees(500)
                       //creates a decision tree classifier on the training data with set hyper-parameters
           
     val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, rfClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              

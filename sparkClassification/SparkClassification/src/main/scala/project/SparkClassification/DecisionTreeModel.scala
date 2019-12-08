@@ -42,7 +42,7 @@ object DTmodelMain {
                                "NULL1", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
                                "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
                                "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", 
-                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D") //read in the joined data as a dataframe
+                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D", "NULL2") //read in the joined data as a dataframe
                                                                                 
                            
     val myFeatures = Array(
@@ -90,7 +90,7 @@ object DTmodelMain {
     
     //Uses cross-validation to find optimal hyper-parameters
     //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    /*
+    
                                   
     val gridSearch = new ParamGridBuilder()
                         .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
@@ -114,6 +114,6 @@ object DTmodelMain {
     
     println("AUC of Optimized Decision Tree Model is " + cvAUC)
     
-    */
+    
   }
 }
