@@ -6,12 +6,13 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier}
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+
+
 
 object DTmodelMain {
   
@@ -37,78 +38,70 @@ object DTmodelMain {
                                "WEATHER_DELAY_MINUTES", "DATE_O", "LATITUDE_O",
                                "LONGITUDE_O", "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
                                "WDSP_O", "MXSPD_O", "GUST_O", "MAX_O", "MIN_O", "PRCP_O", "SNDP_O",
-                               "FRSHTT_O", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
+                               "FRSHTT_1_O","FRSHTT_2_O", "FRSHTT_3_O", "FRSHTT_4_O", "FRSHTT_5_O", "FRSHTT_6_O",
+                               "NULL1", "DATE_D", "LATITUDE_D", "LONGITUDE_D", "TEMP_D",
                                "DEWP_D", "SLP_D", "STP_D", "VISIB_D",	"WDSP_D", "MXSPD_D", "GUST_D",
-                               "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", "FRSHTT_D") //read in the joined data as a dataframe
+                               "MAX_D", "MIN_D", "PRCP_D", "SNDP_D", 
+                               "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D") //read in the joined data as a dataframe
                                                                                 
                            
-    val myFeatures = Array("ORIGIN_LAT", "ORIGIN_LONG",
-                         "DEST_LAT", "DEST_LON", "AIRLINE",
-                         "TAIL_NUMBER",	"DISTANCE",
+    val myFeatures = Array(
                          //Origin
-                         "TEMP_O", "DEWP_O", "SLP_O", "STP_O", "VISIB_O",
-                         "WDSP_O", "MXSPD_O", "GUST_O",	"MAX_O", "MIN_O",	"PRCP_O",
-                         "SNDP_O", "FRSHTT_O",
+                         "TEMP_O", "DEWP_O", "VISIB_O",
+                         "WDSP_O",	"MAX_O", "MIN_O",
+                         "SNDP_O", "FRSHTT_1_O","FRSHTT_2_O", "FRSHTT_3_O", "FRSHTT_4_O", "FRSHTT_5_O", "FRSHTT_6_O",
                          //Destination
-                         "TEMP_D", "DEWP_D", "SLP_D", "STP_D", "VISIB_D",
-                         "WDSP_D", "MXSPD_D", "GUST_D",	"MAX_D", "MIN_D",	"PRCP_D",
-                         "SNDP_D", "FRSHTT_D")
+                         "TEMP_D", "DEWP_D", "VISIB_D",
+                         "WDSP_D",	"MAX_D", "MIN_D",
+                         "SNDP_D", "FRSHTT_1_D","FRSHTT_2_D", "FRSHTT_3_D", "FRSHTT_4_D", "FRSHTT_5_D", "FRSHTT_6_D")
      
     val FeatureIndexer = new VectorAssembler()
                              .setInputCols(myFeatures)
-                             .setOutputCol("features") //sets the feature vector as one column consisting of all specified features                   
-     
-    val modelData = FeatureIndexer.transform(df) //add the feature vector to the dataframe
-    
-    val Array(trainingData, testingData) = modelData.randomSplit(Array(0.75, 0.25)) //split data into training and testing
-    
-    val dtModel = new DecisionTreeClassifier()
-                      .setFeaturesCol("features")
-                      .setLabelCol("WEATHER_DELAY")
-                      .setImpurity("entropy")
-                      .setMaxDepth(10)
-                      .fit(trainingData) //fits a decision tree classifier on the training data with set hyper-parameters
-                     
-    val predictionData = dtModel.transform(testingData) //append the predictions and probabilities to the dataframe
-    
-    val auc = new BinaryClassificationEvaluator()
-                       .setLabelCol("WEATHER_DELAY")
-                       .setMetricName("areaUnderROC") //measure accuracy of model with AUC
-                       //only supported metric? 
-                       .evaluate(predictionData)
-                     
-    println("AUC of Decision Tree Model is " + auc)
-    
-    //Uses cross-validation and defines a new pipeline to find optimal hyper-parameters
-    //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    
-    val dtCrossValidation = new DecisionTreeClassifier()
-                                .setFeaturesCol("features")
-                                .setLabelCol("WEATHER_DELAY")
-                                //define new decision tree model with no parameters set
-    
-    val aucCrossValidation = new BinaryClassificationEvaluator()
-                                 .setLabelCol("WEATHER_DELAY")
-                                 .setMetricName("areaUnderROC")
-                                 //define new evaluator to be used in cross validation
-                                  
-    val gridSearch = new ParamGridBuilder()
-                        .addGrid(dtCrossValidation.maxDepth, Array(5, 10, 20))
-                        .addGrid(dtCrossValidation.maxBins, Array(20, 25, 40))
-                        .addGrid(dtCrossValidation.impurity, Array("entropy", "gini"))
-                        .build()
-                        //specifies the parameters to be optimized in the model
+                             .setOutputCol("features") //sets the feature vector as one column consisting of all specified features
     
     val LabelIndexer = new StringIndexer()
                            .setInputCol("WEATHER_DELAY")
                            .setOutputCol("label")    
-                           //need to send WEATHER_DELAY through a string indexer to build a pipeline for cross validation
+                           //need to send WEATHER_DELAY through a string indexer to build a pipeline                         
     
-    val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, dtCrossValidation)) //creates pipeline                  
-                        
+    val Array(trainingData, testingData) = df.randomSplit(Array(0.75, 0.25)) //split data into training and testing
+    
+    val dtClassifier = new DecisionTreeClassifier()
+                      .setFeaturesCol("features")
+                      .setLabelCol("label")
+                      .setImpurity("gini")
+                      .setMaxDepth(5)
+                      //creates a decision tree classifier on the training data with set hyper-parameters
+          
+    val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, dtClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
+   
+    val dtModel = pipeline.fit(trainingData) //fit the model on the training data
+                 
+    val predictionData = dtModel.transform(testingData) //append the predictions and probabilities to the dataframe
+    
+    val metricEvaluator = new BinaryClassificationEvaluator()
+                       .setLabelCol("label")
+                       .setMetricName("areaUnderROC") //measure accuracy of model with AUC
+                       //only supported metric? 
+    
+    val auc = metricEvaluator.evaluate(predictionData)
+                     
+    println("AUC of Decision Tree Model is " + auc)
+    
+    //Uses cross-validation to find optimal hyper-parameters
+    //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
+    /*
+                                  
+    val gridSearch = new ParamGridBuilder()
+                        .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
+                        .addGrid(dtClassifier.maxBins, Array(20, 25, 40))
+                        .addGrid(dtClassifier.impurity, Array("entropy", "gini"))
+                        .build()
+                        //specifies the parameters to be optimized in the model
+                     
     val cv = new CrossValidator()
                  .setEstimator(pipeline)
-                 .setEvaluator(aucCrossValidation)
+                 .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
                  .setNumFolds(10)
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
@@ -117,10 +110,10 @@ object DTmodelMain {
     
     val cvPredictionData = CVmodel.transform(testingData)
     
-    val cvAUC = aucCrossValidation.evaluate(cvPredictionData)
+    val cvAUC = metricEvaluator.evaluate(cvPredictionData)
     
     println("AUC of Optimized Decision Tree Model is " + cvAUC)
     
-    
+    */
   }
 }
