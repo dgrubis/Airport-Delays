@@ -1,7 +1,7 @@
 Code author
 -----------
-Brian Rouse
-Derek Grubis
+Brian Rouse  
+Derek Grubis  
 Harshit Gupta
 
 # CS 6240 Final Project
@@ -12,19 +12,19 @@ The project required two phases of work:
 
 
 # Environment and Software Versions
-Hadoop Version - 2.9.1
-Spark Version - 2.3.1 (without bundled hadoop)
-JDK 1.8
-Scala 2.11.12
-Maven
-AWS CLI (for EMR execution)
+Hadoop Version - 2.9.1  
+Spark Version - 2.3.1 (without bundled hadoop)  
+JDK 1.8  
+Scala 2.11.12  
+Maven  
+AWS CLI (for EMR execution)  
 
-JAVA_HOME=/usr/lib/jvm/java-8-oracle
-HADOOP_HOME=/home/user/tools/hadoop/hadoop-2.9.1
-SCALA_HOME=/home/user/tools/scala/scala-2.11.12
-SPARK_HOME=/home/user/tools/spark/spark-2.3.1-bin-without-hadoop
-YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
-PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SCALA_HOME/bin:$SPARK_HOME/bin
+JAVA_HOME=/usr/lib/jvm/java-8-oracle  
+HADOOP_HOME=/home/user/tools/hadoop/hadoop-2.9.1  
+SCALA_HOME=/home/user/tools/scala/scala-2.11.12  
+SPARK_HOME=/home/user/tools/spark/spark-2.3.1-bin-without-hadoop  
+YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop  
+PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SCALA_HOME/bin:$SPARK_HOME/bin  
 SPARK_DIST_CLASSPATH=$(hadoop classpath)
 
 # Build and Execution Steps
