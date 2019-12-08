@@ -27,6 +27,10 @@ YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
 PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SCALA_HOME/bin:$SPARK_HOME/bin  
 SPARK_DIST_CLASSPATH=$(hadoop classpath)
 
+# Input Files:
+Weather Dataset: https://www7.ncdc.noaa.gov/CDO/cdoselect.cmd?datasetabbv=GSOD&countryabbv=&georegionabbv=
+Flight and Airport Dataset: https://www.kaggle.com/usdot/flight-delays/version/1#flights.csv
+
 # Build and Execution Steps
 All of the build & execution commands are organized in the Makefile.
 1) Unzip project file.
