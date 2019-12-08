@@ -94,18 +94,19 @@ object RFmodelMain {
     
                                   
     val gridSearch = new ParamGridBuilder()
-                        .addGrid(rfClassifier.maxDepth, Array(5, 7, 10, 20))
-                        .addGrid(rfClassifier.maxBins, Array(17, 20, 25, 40))
+                        .addGrid(rfClassifier.maxDepth, Array(5, 8, 12))
                         .addGrid(rfClassifier.impurity, Array("entropy", "gini"))
-                        .addGrid(rfClassifier.numTrees, Array(10, 50, 100, 200))
+                        .addGrid(rfClassifier.numTrees, Array(50, 100, 200))
                         .build()
-                        //specifies the parameters to be optimized in the model
+                        //specifies the parameters to be optimized in the model (here is a 3x3x2x3) search grid)
+                        //switch bins for numTrees for random forest
                      
     val cv = new CrossValidator()
                  .setEstimator(pipeline)
                  .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
-                 .setNumFolds(10)
+                 .setNumFolds(5)
+                 .setParallelism(5) //adds parallelism to training to achieve greater speedup
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
     
     val CVmodel = cv.fit(trainingData) //fit this new model

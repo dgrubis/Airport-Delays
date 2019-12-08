@@ -93,17 +93,18 @@ object DTmodelMain {
     
                                   
     val gridSearch = new ParamGridBuilder()
-                        .addGrid(dtClassifier.maxDepth, Array(5, 10, 20))
-                        .addGrid(dtClassifier.maxBins, Array(20, 25, 40))
+                        .addGrid(dtClassifier.maxDepth, Array(5, 8, 12))
+                        .addGrid(dtClassifier.maxBins, Array(20, 25, 32))
                         .addGrid(dtClassifier.impurity, Array("entropy", "gini"))
                         .build()
-                        //specifies the parameters to be optimized in the model
+                        //specifies the parameters to be optimized in the model by building a grid (here is a 3x3x2) search grid
                      
     val cv = new CrossValidator()
                  .setEstimator(pipeline)
                  .setEvaluator(metricEvaluator)
                  .setEstimatorParamMaps(gridSearch)
-                 .setNumFolds(10)
+                 .setNumFolds(5)
+                 .setParallelism(5) //adds parallelism to training to achieve greater speedup
                  //creates cross validator object that will fit models as it searches for the optimal paramters based on the evaluator we specified 
     
     val CVmodel = cv.fit(trainingData) //fit this new model
