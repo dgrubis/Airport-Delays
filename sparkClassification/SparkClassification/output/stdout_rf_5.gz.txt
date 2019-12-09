@@ -1,0 +1,2 @@
+AUC of Random Forest Model is 0.8000077587699423
+AUC of Optimized Random Forest Model is 0.8395479290394945

@@ -1,0 +1,2 @@
+AUC of Decision Tree Model is 0.5
+AUC of Optimized Decision Tree Model is 0.5
