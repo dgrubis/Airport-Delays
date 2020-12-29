@@ -70,8 +70,8 @@ object RFmodelMain {
                       .setFeaturesCol("features")
                       .setLabelCol("label")
                       .setImpurity("gini")
-                      .setMaxDepth(5)
-                      .setNumTrees(100)
+                      //.setMaxDepth(5)
+                      .setNumTrees(1000)
                       //creates a decision tree classifier on the training data with set hyper-parameters
           
     val pipeline = new Pipeline().setStages(Array(FeatureIndexer, LabelIndexer, rfClassifier)) //creates pipeline to chain the indexers (features, label) and classifier together              
@@ -91,7 +91,7 @@ object RFmodelMain {
     
     //Uses cross-validation to find optimal hyper-parameters
     //*Expensive* Compare to above with finding optimal hyperparameters vs. time complexity in parallel
-    
+    /*
                                   
     val gridSearch = new ParamGridBuilder()
                         .addGrid(rfClassifier.maxDepth, Array(5, 10))
@@ -116,6 +116,6 @@ object RFmodelMain {
     val cvAUC = metricEvaluator.evaluate(cvPredictionData)
     
     println("AUC of Optimized Random Forest Model is " + cvAUC)
-    
+    */
   }
 }
